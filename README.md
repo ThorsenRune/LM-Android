@@ -1,7 +1,7 @@
 # LM_Android
-Android application for controlling LiberMano - a neuroprothesis fro restoring hand function 
+Android application for controlling the LiberMano device
 
-Libermano is a system for restoring movements. (A further development of the MeCFES system https://mecfes.wikispaces.com/)
+Libermano is a system for restoring movements. (A branch of the MeCFES system https://mecfes.wikispaces.com/)
 The parts are 
 Mechanical
 Electronics
