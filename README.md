@@ -6,11 +6,11 @@ Libermano is a system for restoring movements. (A branch of the MeCFES system ht
 
 The parts are 
 
-> <sub>* Mechanical
+* Mechanical
 
-> <sub>* Electronics
+* Electronics
 
-> <sub>* Software
+* Software
 
 This repository is the Android application which controls the electronics via bluetooth.
 ![](gdocs2md-html_images/image_0.jpg  )
