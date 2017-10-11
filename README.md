@@ -14,7 +14,7 @@ The parts are
 
 This repository is the Android application which controls the electronics via bluetooth.
 
-![](gdocs2md-html_images/image_0.jpg)
+![](gdocs2md-html_images/image_0.jpg width="400")
 
 History:
 
