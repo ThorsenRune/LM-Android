@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+170824
+ folder: https://drive.google.com/drive/u/0/folders/0B5pCUAt6BabuU1I1Ri1zNzA4SG8
+ Doc:https://docs.google.com/document/d/1xF3RMDCdctyJOumEbtPY5BqLaWLW7_jzODTFg8oeW6k/edit
+ -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".colorpick"
+    android:layout_gravity="center"
+    android:padding="@dimen/fab_margin"
+    android:stretchColumns="1"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="Color1 "
+            android:id="@+id/idcol1" />
+        <Button
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Color 2 "
+            android:id="@+id/idcol2"
+            />
+        <TextView
+            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/idtextview6"
+            android:textSize="10pt"
+            android:textColor="@color/white"
+            android:text="Select two colors"
+            android:layout_weight=".4"
+            android:textAlignment="center"
+            android:padding="10pt"
+            />
+    </LinearLayout>
+    <SeekBar
+        android:id="@+id/seekbar_back"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10px"
+        android:max="100"
+        android:progress="50"></SeekBar>
+
+    <Button
+        android:id="@+id/idOkButton87"
+        android:layout_width="match_parent"
+        android:layout_height="10mm"
+
+        android:textAllCaps="false"
+        android:padding="10pt"
+        android:text="Accept"
+        />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="0.5"
+        android:layout_gravity="center"
+        android:id="@+id/idPaneVerticalSliders1">
+        <RelativeLayout
+            android:id="@+id/idparent3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+             android:orientation="vertical">
+        </RelativeLayout>
+    </ScrollView>
+
+
+</LinearLayout>

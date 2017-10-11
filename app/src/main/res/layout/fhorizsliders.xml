@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/idContainer4HorizontalSliders"
+        android:layout_width="wrap_content"
+        android:orientation="vertical"
+        android:layout_weight="3"
+        android:background="@drawable/backborder"
+
+        android:layout_height="wrap_content">
+        <!-- Horizontal slider pane-->
+        <!-- Horizontal slider are havign ID: WH#            -->
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WH0"
+            android:layout_marginBottom="10mm"
+            android:layout_height="10mm"
+            android:layout_width="match_parent"
+            android:padding="10pt"
+            android:tag="2"
+            android:layout_gravity="top"
+            android:background="@drawable/backborder"
+
+            />
+        <!-- Middle slider -->
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WH1"
+            android:layout_gravity="top"
+            android:layout_width="match_parent"
+            android:layout_height="10mm"
+            android:layout_marginBottom="10mm"
+            android:padding="10pt"
+            android:tag="3"
+
+            />
+        <!-- Bottom slider -->
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WH2"
+            android:layout_height="10mm"
+            android:layout_width="match_parent"
+            android:padding="10pt"
+            android:tag="4"
+
+            />
+    </LinearLayout>
+

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+         android:layout_width="match_parent"
+        android:background="@drawable/backborder"
+        android:layout_weight="5"
+        android:layout_height="wrap_content">
+        <!-- Vertical slider are havigng ID: WV#            -->
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WV0"
+            android:layout_width="10mm"
+            android:layout_height="match_parent"
+            android:layout_marginRight="5mm"
+            android:padding="10pt"
+            android:scrollbarSize="1mm"
+            android:tag="4" />
+
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WV1"
+            android:layout_width="10mm"
+            android:layout_height="match_parent"
+            android:layout_marginRight="5mm"
+            android:padding="10pt"
+            android:scrollbarSize="1mm"
+            android:tag="4" />
+
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WV3"
+            android:contentDescription="Sliderview"
+            android:layout_width="10mm"
+            android:layout_height="match_parent"
+            android:layout_marginRight="5mm"
+            android:padding="10pt"
+            android:scrollbarSize="1mm"
+            android:tag="4" />
+
+        <!-- Invisible spacer to center  next controls-->
+        <View android:layout_width="0dp"
+            android:visibility="invisible"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WV4"
+            android:layout_marginRight="5mm"
+            android:layout_width="10mm"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:padding="10pt"
+            android:scrollbarSize="1mm"
+            android:tag="4"
+            />
+
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WV5"
+            android:layout_width="10mm"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginRight="5mm"
+            android:padding="10pt"
+            android:scrollbarSize="1mm"
+            android:tag="4" />
+
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WV6"
+            android:layout_width="10mm"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginRight="5mm"
+            android:padding="10pt"
+            android:scrollbarSize="1mm"
+            android:tag="2" />
+        <!-- Invisible spacer to right align last contros-->
+        <View android:layout_width="0dp"
+            android:visibility="invisible"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WV7"
+            android:layout_width="10mm"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginRight="5mm"
+            android:padding="10pt"
+            android:scrollbarSize="1mm"
+            android:tag="4" />
+
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WV8"
+            android:layout_width="10mm"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginRight="5mm"
+            android:padding="10pt"
+            android:scrollbarSize="1mm"
+            android:tag="4" />
+
+        <it.fdg.lm.cSliderView
+            android:id="@+id/WV9"
+            android:layout_width="10mm"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginRight="5mm"
+            android:padding="10pt"
+            android:scrollbarSize="1mm"
+            android:tag="4" />
+
+</LinearLayout>

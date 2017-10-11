@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="it.fdg.lm">
+    <!-- https://docs.google.com/document/d/1AD-wMSdcvSXNdE9X9a8AQaDS1LUOa0I1FgxBDM7fp4s/edit -->
+    <!-- Important permissions -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".fMain"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- note170530     -->
+        <activity
+            android:name=".cSetupFile"
+            android:label="Settings"
+            android:parentActivityName=".fMain">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="it.fdg.lm.fMain" />
+        </activity>
+        <activity android:name=".colorpick" />
+        <activity
+            android:name=".cBitField"
+            android:label="Mode bit settings"
+            android:parentActivityName=".fMain">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".fMain" />
+        </activity>
+
+    </application>
+</manifest>

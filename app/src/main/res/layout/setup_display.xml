@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="wrap_content"
+    tools:context=".cSetupFile"
+    android:textAllCaps="false"
+    android:orientation="vertical"
+    android:id="@+id/idDispSetup"
+    android:layout_width="match_parent">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <RelativeLayout
+                android:id="@+id/layout1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true">
+
+                <Button
+                    android:id="@+id/idbutton31"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentTop="true"
+                    android:onClick="cmdCommand"
+                    android:text="Settings Sync"
+                    android:textAllCaps="false" />
+
+                <EditText
+                    android:id="@+id/idFilterText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="5dp"
+                    android:minWidth="10dp"
+                    android:minHeight="5dp"
+                    android:layout_alignTop="@id/idbutton31"
+                    android:layout_toRightOf="@id/idbutton31"
+                    android:hint="Filterstring"
+                    android:visibility="visible"
+                    android:layout_alignBottom="@+id/idbutton31" />
+            </RelativeLayout>
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:minHeight="100dp"
+                android:layout_below="@id/layout1"
+                >
+
+                <EditText
+                    android:id="@+id/idSettingsText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:minHeight="100dp"
+                    android:gravity="left"
+                    android:hint="Settings file" />
+            </ScrollView>
+        </RelativeLayout>
+
+
+
+</LinearLayout>
