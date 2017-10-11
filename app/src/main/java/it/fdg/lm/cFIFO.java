@@ -15,7 +15,7 @@ public class cFIFO {		//[] Put a c in front to indicate that it's a class
         nFIFOSize=nSize;
         aFIFO=new byte[nSize];
         this.mFlush();
-    }   //Construct the FIFO buffer
+    }   //Construct the FIFO buffer 
     public final void mFlush(){               //170217 flush the buffer
         nBytesAvail=0;
         nSTARTpointer=0;				//Startpointer==Endpointer means overflow or buffer empty
