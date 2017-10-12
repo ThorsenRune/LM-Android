@@ -102,7 +102,6 @@ public class cSerial5 {
         return aBytes;
     }       //This is the worker method
 
-
     //State register
     private void mStateSet(cKonst.eSerial nNewState) {
         nState_Serial_=nNewState;
