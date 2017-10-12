@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 import static it.fdg.lm.cAndMeth.mGetDateStr;
+import static it.fdg.lm.cDebug.nTestCount;
 import static it.fdg.lm.cFileSystem.mPersistHex;
 import static it.fdg.lm.cFileSystem.mPrefs5;
 import static it.fdg.lm.cFileSystem.mStr2Pref;
@@ -27,6 +28,7 @@ import static it.fdg.lm.cFunk.mArrayFind;
 import static it.fdg.lm.cFunk.mArrayRedim;
 import static it.fdg.lm.cFunk.mInt2Bool;
 import static it.fdg.lm.cFunk.mLimit;
+import static it.fdg.lm.cKonst.eNum.kPrivileges;
 import static it.fdg.lm.cKonst.eNum.kRefreshRate;
 import static java.lang.Thread.currentThread;
 
@@ -114,10 +116,14 @@ public final class cProgram3 {
     //--------------------------------- MAIN METHODS------------------------------
     //          PROPERTIES
     public static boolean bAdmin() {
-        return ( nAppProps[cKonst.eNum.kPrivileges.ordinal()]>0);
+        return ( nAppProps[kPrivileges.ordinal()]>0);
     }
     public static int nUserLevel() {
-        return ( nAppProps[cKonst.eNum.kPrivileges.ordinal()]);
+        return ( nAppProps[kPrivileges.ordinal()]);
+    }
+    public static boolean nUserLevel1(int level) {
+        int bitmask = nAppProps[kPrivileges.ordinal()];
+        return (0<( bitmask&level ));
     }
     //          METHODS
 
@@ -128,8 +134,8 @@ public final class cProgram3 {
         cFileSystem.mInit(mainContext);
         //Prepare the protocols
         mPersistAllData(true);         //onCreate
-        if (mAppProps(cKonst.eNum.kAutoConnect)>0)
-            oProtocol[nCurrentProtocol].mDoConnect(null);      //170912 Autoconnect at user privileges
+        //!-if (mAppProps(cKonst.eNum.kAutoConnect)>0)      moved to cProtocol3 171012
+            oProtocol[nCurrentProtocol].mDoConnectRequest(null);      //170912 Autoconnect at user privileges
         cProgram3.mAppPropsSet(kRefreshRate,2000);
     }
 
@@ -144,6 +150,7 @@ public final class cProgram3 {
     }
 
     public static boolean mMainProcess1() {
+        nTestCount[0]++;
         if (bDoRefresh)
             fMain.mRefresh_DispMain(bDoRedraw);       //Syncrhornize display update with async process
         bDoRefresh=false;
@@ -212,7 +219,7 @@ public final class cProgram3 {
             mMessage(msg);
     }
     public static void mMsgDebug(String msg){      //Display current status of protocol
-        if (bAdmin()) mMessage(msg);
+        if (nUserLevel1(cKonst.bitmask.kDebug)) mMessage(msg);
     }
     private static void mAlert(String msg){        //Worker function for messages
         if (bAdmin())
@@ -264,6 +271,7 @@ public final class cProgram3 {
         String[] s = lst.toArray(new String[0]);
         return s;
     }
+
     public static void mProtocolPrepare(int kMaxDevices) {
         oProtocol= new cProtocol3[kMaxDevices];
         for (int i=0;i<oProtocol.length;i++) {
@@ -326,3 +334,7 @@ public final class cProgram3 {
         return nPalette;
     }
 }
+/*
+    Call chain
+    oProtocol[i].mInit(i)->kBT_ConnectReq
+ */

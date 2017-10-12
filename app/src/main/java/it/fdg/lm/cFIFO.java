@@ -3,7 +3,7 @@ package it.fdg.lm;
 
 
 
-public class cFIFO {		//[] Put a c in front to indicate that it's a class
+public class cFIFO {		                    //
     public static final int kFIFOSize=10000;	//Maximal buffer nDataLength in bytes
     public int nBytesAvail;
     private int nSTARTpointer;

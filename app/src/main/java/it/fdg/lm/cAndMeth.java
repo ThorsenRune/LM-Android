@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import static it.fdg.lm.cFunk.mInt2Bool;
-import static it.fdg.lm.cKonst.kTextSize;
 import static it.fdg.lm.cProgram3.bDesignMode;
 import static it.fdg.lm.cProgram3.mAppProps;
 import static it.fdg.lm.cProgram3.mErrMsg;
@@ -195,7 +194,7 @@ public class cAndMeth extends Activity{
             public View getView(int position, View convertView, ViewGroup parent) {         //The current selection element before dropdown
                 View view =super.getView(position, convertView, parent);
                 TextView textView=(TextView) view.findViewById(android.R.id.text1);
-                textView.setTextSize(kTextSize);
+                textView.setTextSize(cKonst.nTextSize);
                 textView.setTextColor(Color.WHITE);
                 textView.setBackgroundColor(Color.BLACK);
                 return view;
@@ -206,7 +205,7 @@ public class cAndMeth extends Activity{
                 TextView textView=(TextView) view;
                 if (1==((i++) % 2))  textView.setTextColor(Color.YELLOW);
                 else textView.setTextColor(Color.WHITE);
-                textView.setTextSize(kTextSize);
+                textView.setTextSize(cKonst.nTextSize);
                 textView.setBackgroundColor(Color.BLACK);
                 return textView;
             }

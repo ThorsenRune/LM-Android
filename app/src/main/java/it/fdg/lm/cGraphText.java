@@ -22,13 +22,16 @@ public class cGraphText extends Application {       //This should handle text gr
     private static int canvasWidth;
     public static int nBackColor;
     private static boolean bRotated;
-    public static float nTextSize=30;
-
+    private static int nTextSize=30;
     public cGraphText() {
         mContext=getApplicationContext();
-        nBackColor = ContextCompat.getColor(mContext,R.color.colorBackground);
-        oTextPaint.setTextSize(nTextSize);
+        mInit(nTextSize);
+    }
 
+    public static void mInit(int newTextSize) {
+        nBackColor = ContextCompat.getColor(mContext,R.color.colorBackground);
+        nTextSize= newTextSize;
+        oTextPaint.setTextSize(nTextSize);
     }
 
 

@@ -1,9 +1,12 @@
 //folder: https://drive.google.com/drive/u/0/folders/0B5pCUAt6BabuU1I1Ri1zNzA4SG8
 //Doc: https://docs.google.com/document/d/1R5-SPit_fAFV2P3UILvL1Y-MrLzK05l34V1ZhRiZrFY/edit
+/**             DESCRIPTIONS
 
-package it.fdg.lm;
-//				A Dummy module Containng description of the SW 
-/**
+
+Codestyle
+    I prefer sCamelCase style with cMyClass, sString, nNumeber, oObject, eEnum
+
+
 History:
 Cleaning process 
 	cSerial5	171004
@@ -13,6 +16,7 @@ Entry points:
  fmain.onCreate->mEntryPoint				//Principal entry point
  cProgram3.mCommunicate(true)->mPeriodicProcessing			//Activate communication with device
 
+mProtocolPrepare-> oProtocol[i].mInit
 
  mPersistAllData	(171005A)
  /*   Persistent data for the application. Get/Set current values  to static storage
@@ -21,15 +25,6 @@ Entry points:
  * */
 
 
-import android.content.Context;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
-import android.widget.Toast;
-
-import static it.fdg.lm.cProgram3.mProtocolPrepare;
-import static it.fdg.lm.cProgram3.nAppProps;
-import static it.fdg.lm.cProgram3.oProtocol;
-import static it.fdg.lm.cProgram3.sDevices1;
 
 /**Main program methods
 		*
@@ -108,6 +103,40 @@ ON signal, swipe LR to activate other signal view
 
  
  /*			OBSOLETE METHODS
+
+     private void mTest(Menu myMenu) {
+         myMenu.add(0, 0, 0, "Red").setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+         MenuItem m = myMenu.getItem(0);
+         getLayoutInflater().setFactory(new LayoutInflater.Factory() {
+
+             @Override
+             public View onCreateView(String name, Context context, AttributeSet attrs) {
+                 // If you are using AppCompat, you will need to change the string below.
+                 if (name.equalsIgnoreCase("com.android.internal.view.menu.ActionMenuItemView")) {
+                     try {
+                         LayoutInflater f = getLayoutInflater();
+                         final View view = f.createView(name, null, attrs);
+                         view.post(new Runnable() {
+
+                             public void run() {
+                                 TextView textView = (TextView) view;
+                                 // Since you only want to change it for one item you need to
+                                 // check if the TextView text is the correct value.
+                                 if (textView.getText().toString().equals("Red")) {
+                                     textView.setTextColor(Color.RED);
+                                 }
+                             }
+                         });
+                         return view;
+                     } catch (InflateException e) {
+                     } catch (ClassNotFoundException e) {
+                     }
+                 }
+                 return null;
+             }
+         });
+     }
+
     public String mReadString() {
         String s="";
         nBytesInBuffer= cSerial5.nBytesAvailable(oInputStream);

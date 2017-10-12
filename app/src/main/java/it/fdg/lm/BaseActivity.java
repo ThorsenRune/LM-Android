@@ -124,16 +124,21 @@ public class BaseActivity extends AppCompatActivity {
     static void mMenuCommon(Menu myMenu, int nId) {        //Negative index will just update, index of which menu has been clicked
         nMnuCount=0; //   Reset menucounter
         //NOw the Connection menu
-        if (mnuMain(nId, oProtocol[nCurrentProtocol].mGetConnectMenuText())) {    //Make a connection, 3 clicks to
+        if (mnuMain(nId, mGetConnectMenuText())) {    //Make a connection, 3 clicks to
             cProtocol3 prot = oProtocol[0];
             cProgram3.mCommunicate(true);
             if (prot.mIsConnected())            //Just reset protocol
                 prot.mDoReset();
             else                                //if not connected do connections
-                prot.mDoConnect(sDevices1[0]);
+                prot.mDoConnectRequest(sDevices1[0]);
         }
         mRefreshRate(500);
     }
+
+    private static String mGetConnectMenuText() {
+            String title = oProtocol[nCurrentProtocol].mGetDeviceName();
+            return title;
+        }       //Returns a text to display on the menu
 
 
 
@@ -148,35 +153,30 @@ public class BaseActivity extends AppCompatActivity {
     }
     private static boolean mnuMain(int nId, String s) {
         mnuClick(nId,s);
-        if (nId<0)
+        if (nId<0) {
             myMenu.findItem(nMnuCount).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        }
         return (nId==nMnuCount);
             /*      Alternative information
     *.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
     * see also:https://stackoverflow.com/questions/22046903/changing-the-android-overflow-menu-icon-programmatically
     * */
-
     }
 
     public static boolean mnuClick(int nId, String s) {
         return mnuClick( nId,  s,true);
     }
-    public static boolean mnuClick(int nId, String s,boolean ena) {   //add a clickmenu
+    public static boolean mnuClick(int nId, Object s,boolean ena) {   //add a clickmenu
         nMnuCount=        nMnuCount+1;  //Increase for each call to iterate through menus
-        if (nId < 0) {
-            if (nMnuCount<2)
-                myMenu.clear();      //Reset the menu
-            _mItem=myMenu.add(Menu.NONE, nMnuCount, Menu.NONE, s);   //Make menu item
+        if (nId < 0) {          //Add the   item to the menu bar
+            _mItem=myMenu.add(Menu.NONE, nMnuCount, Menu.NONE, (CharSequence) s);   //Make menu item
             _mItem.setEnabled(ena);
         }
         if (nId == nMnuCount) {      //Returns true if clicked
-            if (myMenu==null)
-                mErrMsg("Fatal nulpinter");
-            else
-            _mItem=myMenu.findItem(nId);
+            if (myMenu==null)                mErrMsg("Fatal nulponter");
+            else            _mItem=myMenu.findItem(nId);
             return true;
         }
-
         return false;
     }
 
@@ -185,38 +185,28 @@ public class BaseActivity extends AppCompatActivity {
     public static boolean menuFindBTDevice(int nId) {
         if (mnuClick(nId,"Find BT device"))          //R170725
         {
-            cUInput.mInputSelectDevice(true);
+            mBT_DeviceSelect();
+           // cUInput.mInputSelectDevice(true);
             return true;
         }
         return false;
     }
 
-    public static boolean mMnuItem(int idOfSelected, int idMenu, String sMenuText, boolean bChecked) {
-        MenuItem mnu = myMenu.findItem(idMenu);
-        if (mnu==null)
-            mnu = myMenu.add(Menu.NONE, idMenu, idMenu, "NewMenu");
-        if(mnu!=null) {     //R170719
-            if (idMenu == idOfSelected) {
-                return true;                //The menu was seleced
-            }
-            if (sMenuText!="") {
-                mnu.setTitle(sMenuText);        //Otherwise this method serves to initialize the menu
-                mnu.setChecked(bChecked);
-            }
-        }
-        return false;                   //The method returns false if the menu was not selected by idOfSelected
+    private static void mBT_DeviceSelect() {
+        oProtocol[nCurrentProtocol].doBTPair();
     }
 
 
-
+    //  --------------------------  SYSTEM CALLS ---------------------------------------
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         mThis = this;
         getMenuInflater().inflate(R.menu.menu_main, menu);
         myMenu = menu;
-            mDoMenu(myMenu, -1);    //Just redraw menus
-        return true;
+ //           mDoMenu(myMenu, -1);    //Just redraw menus
+        return super.onCreateOptionsMenu(menu);
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

@@ -31,6 +31,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import static it.fdg.lm.cAndMeth.mMakeSpinnerAdapter;
+import static it.fdg.lm.cDebug.nTestCount;
 import static it.fdg.lm.cFunk.mArrayFind;
 import static it.fdg.lm.cFunk.mIndexStringArry;
 import static it.fdg.lm.cFunk.mLimit;
@@ -38,10 +39,19 @@ import static it.fdg.lm.cFunk.mStr2Float;
 import static it.fdg.lm.cFunk.mStr2Int;
 import static it.fdg.lm.cFunk.mStr2StrArr;
 import static it.fdg.lm.cFunk.mStrArr2Str;
-import static it.fdg.lm.cKonst.kTextSize;
+import static it.fdg.lm.cKonst.eProtState.kBTDiscoverInProgress;
+import static it.fdg.lm.cKonst.eProtState.kBT_ConnectReq;
+import static it.fdg.lm.cKonst.eProtState.kBT_DiscoverReq;
+import static it.fdg.lm.cKonst.eProtState.kConnectionError;
+import static it.fdg.lm.cKonst.eProtState.kProtInitDone;
+import static it.fdg.lm.cKonst.eProtState.kProtInitInProgress;
+import static it.fdg.lm.cKonst.eProtState.kProtResetReq;
+import static it.fdg.lm.cKonst.eProtState.kProtUndef;
+import static it.fdg.lm.cKonst.eSerial.kBT_Connected;
+import static it.fdg.lm.cKonst.eSerial.kBT_TimeOut;
+import static it.fdg.lm.cKonst.eSerial.kBrokenConnection;
 import static it.fdg.lm.cProgram3.bDoRedraw;
 import static it.fdg.lm.cProgram3.mErrMsg;
-import static it.fdg.lm.cProgram3.mMessage;
 import static it.fdg.lm.cProgram3.mPersistAllData;
 import static it.fdg.lm.cProgram3.nAppProps;
 import static it.fdg.lm.cProgram3.nCurrentProtocol;
@@ -85,6 +95,7 @@ public class cUInput {
     private static boolean bHideKeyboard=true;      //Hide softkeyboard on opening a dialog, waiting for user to click
     private static boolean bReturnKeyPressed;
     public static View oFocusedView;
+    private static int nButtonPressCount;
     //private static cBitField oBitField;         //When editing cBitField
 
     public static boolean mSelected() {         //Returns true if an element is selected
@@ -116,43 +127,29 @@ public class cUInput {
 //            mLayoutAddCheckbox(2, "Relay", nCurrentProtocol==nRelayProtocol);
             mLayoutAddCmd(2,"Other devices").setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {       //R170627
-                    mEditAccept(false);
                     oProtocol[nCurrentProtocol].doBTPair();
+                    mAlertDialog.dismiss();
                 }
             });
             mDialogSetup1("Select device");             //Prepare dialog layout
         }else {       // Callback Get the fields from the editbox
             String devName = mGetText(inCB[1]);
   //          if (cbCheck[2].isChecked()) {
-            oProtocol[nCurrentProtocol].mDoConnect(devName);
+            oProtocol[nCurrentProtocol].mDoConnectRequest(devName);
             myEditType= eEditType.kNull;
             return;
         }
-
-
-
-
     }
 
     public static void mElemViewProps(cElemViewProps oElem) {       //170912        Sets the current view element
         oElemViewProps=oElem;
     }
 
-    public static void mRefresh(boolean doRedraw) {
+    public static void mRefresh(boolean doRedraw) {         //Refresh/draw the ui interface
         //Command selector
         if (doRedraw) {
             oElemViewProps=mGetActiveControl(oFocusedView);     //170915    Return active control of active view
-            if (sErrMsg!=null) {              //Error was encountered tell the user
-                cmdText(sErrMsg);
-                mMessage(sErrMsg);
-            }else if (mGetElemObj()!= null) {
-                if (oFocusdActivity instanceof fMain)
-                    cmdText(oElemViewProps.mDescr());
-                else
-                    mMessage(oElemViewProps.mDescr());
-            } else {
-                cmdText("");
-            }
+            mCommand(false);            //Redraw the command button
         }
     }
 
@@ -433,13 +430,90 @@ public class cUInput {
         return oElemViewProps;          //170915    Dont change if not found
     }
 
-    //Callbacks for the command button
-    public static void mCommand(View v) {
-        if (mGetElemObj()!=null)
-            mInputValue(true);
-        else
-            cmdText("");
+    //*****************************commands for the command button***********************
+    public static void mCommand(boolean bExecute  ) {   //redraw command button or execut the command
+  	/*	STATEMACHINE
+	Order of priorities
+		kProtUndef:			Undefined protocol (not connected)
+		kBT_ConnectReq:        Waiting for device to connect
+		error:				Take some action to resolve error
+		active:				edit vars etc
+	*/
+        if (!(oFocusdActivity instanceof fMain)) return;	//Only on mainscreen
+//	Undefined protocol
+        if (mIsStateProtocol(kConnectionError)) {               //171012    Linked with mProcess_Async
+            cmdText(txtConnectionError());
+            if (bExecute) mTryToConnect();
+        }else if ( mIsStateProtocol(kProtResetReq)) {
+            cmdText("Resetting Protocol "+ nTestCount[0]);
+        }else if ( mIsStateProtocol(kBTDiscoverInProgress)) {
+            cmdText("Select a device ");
+            if (bExecute) mTryToConnect();
+        }else if ( mIsStateProtocol(kProtInitDone)) {
+            cmdText("Protocol Ready "+ nTestCount[0]);
+        }else if ( mIsStateProtocol(kProtUndef)) {
+            cmdText("Undefined connection "+ nTestCount[0]);
+        }else if (mIsStateProtocol(kProtInitInProgress)) {
+            cmdText(cKonst.eTexts.txtDevice_Initializing+" "+  oProtocol[nCurrentProtocol].mGetProtSize() );
+            if (bExecute) mProtStateSet(kBT_ConnectReq);
+        }else if (mIsStateSerial1(kBT_TimeOut)){
+            cmdText(cKonst.eTexts.txtDevice_TimeOut);
+            if (bExecute)mTryToConnect();
+        }else if (sErrMsg!=null) {                          //Error was encountered tell the user
+            cmdText(sErrMsg);
+            if (bExecute) mProtStateSet(kProtResetReq);
+        }else if (mIsStateProtocol(kBT_ConnectReq)){
+            cmdText(cKonst.eTexts.txtDevice_Connecting+mGetDeviceName());
+        }else if (mGetElemObj()!= null) {
+            cmdText(oElemViewProps.mDescr());
+            if (bExecute) mInputValue(true);
+        }else {
+            cmdText("Select control, change value here");
+        }
     }
+
+    private static String txtConnectionError() {
+        if (mIsStateSerial1(kBrokenConnection)){
+            return "Device lost connection, switched off?";
+        }else if (mIsStateSerial1(kBT_TimeOut)){
+            return (cKonst.eTexts.txtDevice_TimeOut);
+        } else {
+            return cKonst.eTexts.txtDevice_DoConnect;
+        }
+    }
+
+    private static boolean mIsStateSerial1(cKonst.eSerial nSerialState) {
+        cKonst.eSerial v = oProtocol[nCurrentProtocol].oSerial.mStateGet();
+        return nSerialState== v;
+    }
+
+    private static void mTryToConnect() {
+        nButtonPressCount=(nButtonPressCount+1)%5;
+        if (nButtonPressCount <3)
+            mProtStateSet(kBT_ConnectReq);
+        else
+            mProtStateSet(kBT_DiscoverReq);
+
+    }
+
+    private static String mGetDeviceName() {
+        return sDevices1[nCurrentProtocol] ;
+    }
+
+    private static void mProtStateSet(cKonst.eProtState nNewState) {
+        oProtocol[nCurrentProtocol].mSetState(nNewState);
+    }
+
+    private static boolean mIsStateProtocol(cKonst.eProtState nProtState) {
+        if (mIsStateSerial1(kBT_Connected))
+            return nProtState==oProtocol[nCurrentProtocol].getState();
+        else {        //DO a check of states
+            if (mIsStateSerial1(kBrokenConnection))
+                mProtStateSet(kConnectionError);
+        }
+        return nProtState==oProtocol[nCurrentProtocol].getState();
+    }
+
 
 //............................      HANDLING EDITING    ............................
 
@@ -460,7 +534,7 @@ public class cUInput {
     private static TextView mNewLabel(String sDesc) {
         TextView lbl = new TextView(mContext);
         lbl.setText(sDesc);
-        lbl.setTextSize(kTextSize);
+        lbl.setTextSize(cKonst.nTextSize);
         return lbl;
     }
 
@@ -652,7 +726,7 @@ public class cUInput {
         }  else if (eEditType.kBitNames== myEditType){      //Accept mEditBitDesc
             mEditBitDesc(bOpen,0);
         }
-        bDoRedraw=true;
+
         if (bOpen==false) mAlertDialog.dismiss();
         bDoRedraw=true;             //Redraw all windows
     }

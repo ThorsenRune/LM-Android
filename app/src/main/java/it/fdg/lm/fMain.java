@@ -19,12 +19,10 @@ import java.util.ArrayList;
 
 import static it.fdg.lm.cAndMeth.mMatchChildVisibility;
 import static it.fdg.lm.cAndMeth.mSetVisibility;
-import static it.fdg.lm.cProgram3.mAppProps;
 import static it.fdg.lm.cProgram3.mMsgDebug;
 import static it.fdg.lm.cProgram3.mPersistAllData;
 import static it.fdg.lm.cProgram3.mRefreshRate;
 import static it.fdg.lm.cProgram3.mySignal;
-import static it.fdg.lm.cProgram3.nCurrentProtocol;
 import static it.fdg.lm.cProgram3.oGlobalGestureDetector;
 import static it.fdg.lm.cProgram3.oProtocol;
 import static java.lang.Integer.signum;
@@ -48,6 +46,8 @@ public class fMain extends BaseActivity {
         mInitControls();            //Prepare widgets for display
         cUInput.mInit(this);         //  initialise the input module
         cProgram3.mRedraw();
+        cKonst.nTextSize = mGetTextSize();
+        cGraphText.mInit((int) cKonst.nTextSize);         //Enable drawing of texts
     }
     public  static void mInit(Context mainContext){     //cProgram3
         if (oProtocol!=null)
@@ -56,8 +56,7 @@ public class fMain extends BaseActivity {
         cFileSystem.mInit(mainContext);
         //Prepare the protocols
         mPersistAllData(true);         //onCreate
-        if (mAppProps(cKonst.eNum.kAutoConnect)>0)
-            oProtocol[nCurrentProtocol].mDoConnect(null);      //170912 Autoconnect at user privileges
+//!- obsolete        oProtocol[nCurrentProtocol].mDoConnectRequest(null);      //170912 Autoconnect at user privileges
         cProgram3.mAppPropsSet(cKonst.eNum.kRefreshRate,2000);
     }
     private void mInitControls() {      //Setup widget references for this display
@@ -140,7 +139,7 @@ public class fMain extends BaseActivity {
     }
 
     public void cmdCommand1(View v){
-        cUInput.mCommand(v);
+        cUInput.mCommand(true);
     }
 
     public static void mRefresh_DispMain(boolean doRedraw) {       //Refresh controls on display
@@ -153,6 +152,7 @@ public class fMain extends BaseActivity {
         } else if (cProgram3.oFocusdActivity instanceof cBitField) {
             ((cBitField) cProgram3.oFocusdActivity).mRefresh(doRedraw);
         } else {
+            cUInput.mRefresh(doRedraw);
             for (int i = 0; i < cSlider.nSliderCount; i++) {
                 cProgram3.oSlider[i].mRefresh(doRedraw);
             }
@@ -163,7 +163,7 @@ public class fMain extends BaseActivity {
             if (cProgram3.mySignal != null) {
                 cProgram3.mySignal.mRefreshSignal(doRedraw);
             }
-            cUInput.mRefresh(doRedraw);
+
         }
     }
 
@@ -182,6 +182,7 @@ public class fMain extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fmain);
+        cProgram3.oFocusdActivity=this;             //Default value for acti
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         cProgram3.mContext=this;
@@ -239,4 +240,8 @@ public class fMain extends BaseActivity {
         super.onPause();
     }
 
+    public int mGetTextSize() {
+        return getResources().getDimensionPixelSize(R.dimen.myFontSize);
+
+    }
 }

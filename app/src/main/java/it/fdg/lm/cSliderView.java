@@ -34,9 +34,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import static android.graphics.Color.RED;
+import static android.graphics.Color.*;
 import static android.graphics.Color.WHITE;
-import static it.fdg.lm.cGraphText.nTextSize;
 import static it.fdg.lm.cProgram3.bAdmin;
 
 public class cSliderView extends View {
@@ -241,21 +240,19 @@ public class cSliderView extends View {
     }
 
     public void mRedraw() { //initialise data for oHandle , slider
-        if (!isInEditMode())
-            if ((isLaidOut()==false) | (getMeasuredHeight()<1)) return;
+        if (!isInEditMode()) {
+            if ((isLaidOut() == false) | (getMeasuredHeight() < 1)) return;
+        }
+        if (isInEditMode()) cGraphText.mInit(20);
          bInitialized = true;
-        nTextSize= (float) (margin*1.2);
-        if (!isInEditMode())
-            nTextSize=getResources().getDimensionPixelSize(R.dimen.myFontSize);
         mGetCanvasProportions();
-
                //Area of the slider x1,y2,x2,y1   (Yes y2 is top,y1 bottom Rect is a mess)
         oArea.set(margin, 2 * margin, canvasWidth - margin, canvasHeight - 2 * margin); //Left, top margin,right,bottom
         //Get number of thumbs Allocate objects  Initialize the intervals
         mTickMarks = mNewPaint(Color.WHITE);//the paint for the slider data(the values)
         mTickMarks.setAntiAlias(true);
         mTickMarks.setTextAlign(Paint.Align.CENTER);
-        mTickMarks.setTextSize(nTextSize/2);
+        mTickMarks.setTextSize(margin );
 
         //rectangles that define the line between and outside of knob
         for (int i=0;i<mColorInterval.length;i++) { //From base to first

@@ -65,39 +65,29 @@ public class cRelay2Client {
     public InputStream oInputStream;
     public OutputStream oOutputStream;
     private int mNewState;
-
-    // Constants that indicate the current connection state
-    public static final int STATE_NONE = 0;       // we're doing nothing
-    public static final int STATE_LISTENING = 1;     // now listening for incoming connections
-    public static final int STATE_WAIT2CONNECT = 2;
-    public static final int STATE_CONNECTED = 3;  // now mClientConnection to a remote device
-    private static final int STATE_LISTEN_FAILED = 104;
-
-    private static final int STATE_BROKEN = 113;    //A broken pipe was reported 170922
-    public static final int STATE_LISTEN_ACCEPTED = 5;
-    public static int bRelayState =STATE_NONE;
-
+    public static cKonst.eSerial bRelayState = cKonst.eSerial.kBT_Undefined;
     private Context mContext;
     public static String sInString="";
     public static String mConnectedDeviceName = null;// Name of the mClientConnection device
     private int nCounter=0;
     private BluetoothAdapter oBTAdapter;         //Local reference
     private String sMessageLog;
+    private cKonst.eSerial kBrokenConnection;
 
 //  ******************************++            IMPLEMENTATIONS         *********************
 
 
     //PROPERTIES
-    public  int mRelayState() {
+    public cKonst.eSerial mRelayState() {
         return bRelayState;
     }
-    private void mSetState(int newState) {
+    private void mSetState(cKonst.eSerial newState) {
         bRelayState =newState;
     }
     public boolean mIsConnected1() {      //Is there a client
-        if (mRelayState()==STATE_BROKEN)
+        if (mRelayState()==kBrokenConnection)
             mCloseService2();
-        return this.mRelayState() == cRelay2Client.STATE_CONNECTED;
+        return mRelayState() == cKonst.eSerial.kBT_Connected;
     } //tHERE IS A CLIENT?
 
 
@@ -118,28 +108,28 @@ public class cRelay2Client {
                 mMsgDebug("Server is Listening");         //When a server connects it will call run
             } catch (IOException e) {
                 bState=13;
-                mSetState(STATE_LISTEN_FAILED);
+                mSetState(cKonst.eSerial.kBT_TimeOut);
                 mMsgDebug("Socket : " +  "listen() failed"+ e);
             }
         }
         public void run() {     //started by mInsecureAcceptThread.start();
-            mSetState(STATE_LISTENING); // Listen to the server socket if we're not mClientConnection
+            mSetState(cKonst.eSerial.kListening); // Listen to the server socket if we're not mClientConnection
             bState=2;
              try {                    // This is a blocking call and will only return on a successful connection or an exception
                  oSocketClient = oSocketServer.accept(30000);  //170926 Timeout after 15 seconds
                  //*********************Thread stops here until connection can be accepted********
-                 mSetState(STATE_LISTEN_ACCEPTED);
+                 mSetState(cKonst.eSerial.kListenAccepted);
                      try {                                      //Pass the streams onto global objects
                          oInputStream = oSocketClient.getInputStream();
                          oOutputStream = oSocketClient.getOutputStream();
-                         mSetState(STATE_CONNECTED);
+                         mSetState(cKonst.eSerial.kBT_Connected);
                          mMessage("Connected to " + oSocketClient.getRemoteDevice().getName());
                      } catch (IOException e) {
                          mMsgLog( "temp sockets not created"+ e);
                      }
 
                 } catch (IOException e) {
-                    mSetState(STATE_LISTEN_FAILED);
+                    mSetState(cKonst.eSerial.kBT_TimeOut);
                     mMsgLog("Error Stopped listening"+e.toString());
                 }
             if (oSocketServer ==null) return;
@@ -153,17 +143,7 @@ public class cRelay2Client {
             bState=3;       //Ending the thread
         }
     }
-    private synchronized void mConnectStreams(BluetoothSocket socket) {
-        mMsgLog( "mClientConnection, Socket Type:" );
-        try {
-            oInputStream = socket.getInputStream();
-            oOutputStream = socket.getOutputStream();
-            mSetState(STATE_CONNECTED);
-        } catch (IOException e) {
-            mMsgLog( "temp sockets not created"+ e);
-        }
 
-    }   //Called when a connection is made
     //************************************OPENING CLOSING **************************************
     public void mOpenService(Context context, BluetoothAdapter oBTadapter){  //170921 remember to call CloseService
         mContext=context;    // Prepares a new BluetoothChat session.
@@ -176,9 +156,9 @@ public class cRelay2Client {
             mMsgLog("Bluetooth not enabled");
             return;
         }
-        mMessageState();
+
         // Only if the state is STATE_NONE, do we know that we haven't started already
-        if (mRelayState() == STATE_NONE) {           // Start listening for a connection
+        if (mRelayState() == cKonst.eSerial.kBT_Undefined) {           // Start listening for a connection
             mMsgLog("Start listening");
             if (mInsecureAcceptThread == null) {
                 mInsecureAcceptThread = new cAcceptThread();
@@ -210,23 +190,8 @@ public class cRelay2Client {
         } catch (IOException e) {
             mMsgLog("close() of server failed " + e.toString());
         }
-        mSetState( STATE_NONE);
+        mSetState(cKonst.eSerial.kBT_Undefined);
     }       //Close streams
-    private void mMessageState() {
-        if (bRelayState ==STATE_LISTENING)
-            mMsgLog("Already listening");
-        else if (bRelayState ==STATE_BROKEN)
-            mMsgLog("Broken pipe");
-        else if (bRelayState ==STATE_NONE)
-            mMsgLog("Ready state");
-        else if (bRelayState ==STATE_LISTEN_FAILED)
-            mMsgLog("STATE_LISTEN_FAILED");
-        else if (bRelayState ==STATE_LISTEN_ACCEPTED)
-            mMsgLog("STATE_LISTEN_ACCEPTED");
-        else
-            mMsgLog("UNKNOWN STATE");
-
-    }
 
     //*************************             PUBLIC  METHODS
 
@@ -240,14 +205,13 @@ public class cRelay2Client {
         //170922 Write a byt to the client
         // Synchronize a copy of the ConnectedThread
         synchronized (this) {
-            if (mRelayState()!= STATE_CONNECTED) {
-                mMessageState();
+            if (mRelayState()!= cKonst.eSerial.kBT_Connected) {
                 return;
             }
             try {       //Maybe the steam was closed by receiver
                 oOutputStream.write(out);
             } catch (IOException e) {
-                mSetState(STATE_BROKEN);
+                mSetState(cKonst.eSerial.kDisconnected);
             }
         }
     }  //Write data to client

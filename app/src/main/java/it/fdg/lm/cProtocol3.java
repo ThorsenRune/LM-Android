@@ -12,14 +12,22 @@ import java.io.OutputStream;
 
 import static it.fdg.lm.cAndMeth.mSleep;
 import static it.fdg.lm.cFunk.mInt2ByteArray;
+import static it.fdg.lm.cKonst.eProtState.*;
+import static it.fdg.lm.cKonst.eProtState.kBTUnavailable;
+import static it.fdg.lm.cKonst.eProtState.kBT_ConnectReq;
+import static it.fdg.lm.cKonst.eProtState.kBT_DiscoverReq;
+import static it.fdg.lm.cKonst.eProtState.kDoConnect_step2;
+import static it.fdg.lm.cKonst.eProtState.kProtError;
+import static it.fdg.lm.cKonst.eProtState.kProtInitDone;
+import static it.fdg.lm.cKonst.eProtState.kProtInitInProgress;
+import static it.fdg.lm.cKonst.eProtState.kProtReady;
+import static it.fdg.lm.cKonst.eProtState.kProtResetReq;
+import static it.fdg.lm.cKonst.eProtState.kProtTimeOut;
 import static it.fdg.lm.cProgram3.bDoRedraw;
 import static it.fdg.lm.cProgram3.mErrMsg;
-import static it.fdg.lm.cProgram3.mMessage;
 import static it.fdg.lm.cProgram3.oFocusdActivity;
 import static it.fdg.lm.cProgram3.sDevices1;
-import static it.fdg.lm.cSerial5.eState.kBrokenConnection;
-import static it.fdg.lm.cSerial5.eState.kConnected;
-import static it.fdg.lm.cSerial5.eState.kConnectionError;
+
 
 /*--------------------------------------------------------------
 *  Main processing communication with device through the protcol
@@ -40,25 +48,7 @@ public  class cProtocol3 {                      //This was formerly just called 
     private int nServerState1= kReady2; //State of the server FSM
     //Flag for initializing protocol mTX_Dispatch:kCommInit
     //{kCommInit, kReady,kErrMsg} meaning: {reset the protocol, protocol is ready to be used, protocol is not initialized and not ready}
-    public enum eProtState{
-        kProtResetReq,             //Do a reset of the protocol
-        //We are waing for device to send packs exposing the protocol
-        kProtInitInProgress,                   //Request for reset of the protocol, kCommInit will be sent to device
-        kProtInitDone,                 //Protocol is loaded and ready to mStartListening
-        kDoConnect1,                 //Request to mConnect to device
-        //The protocol has just been filled with exposed variables and is ready to use
-        kProtInitFailure,
-        //Error in protocol initialization
-        kProtUndef,
-        //The protocol is undefined and cannot be used
-        kProtReady, //Protocol is readyto use
-        kProtTimeOut,
-        kBTUnavailable, kProtError,
-        kBTDoDiscover,kBTDiscoverInProgress,kBTDiscoverDone,
-        kDoConnect_step2,
-        kRelay, kConnected1, kConnectionError;                                 //Do pairing
-        int a=12;
-    }
+
 
     //    Communication protocol headers(commands) shared with device Firmware
     public static final int kReady2=1;    //communication FSM is ready for a new pack
@@ -84,7 +74,7 @@ public  class cProtocol3 {                      //This was formerly just called 
     //     We need to declare a static object to hold the incoming data
     static cProtElem oRXGetReqElem;           //Currently processed element in oRXGetReqElem  161205/rt
     private int nProcessCycleCount=0; //A 'timer' for the number of times the protocol is processed. incremented in mUIProcess
-    private eProtState nProtState; //{kCommInit, kReady,kErrMsg,kUndefined} meaning
+    private cKonst.eProtState nProtState=cKonst.eProtState.kBT_ConnectReq; //{kCommInit, kReady,kErrMsg,kBT_Undefined} meaning
 
     private int k32BitInt= 232;
 	//			PROPERTIES
@@ -108,7 +98,7 @@ public  class cProtocol3 {                      //This was formerly just called 
             oaProtData[i]=new cProtElem(this);
             oaProtData[i].nIndexInContainer=i;
         }
-
+        mSetState(cKonst.eProtState.kBT_ConnectReq);              //171012 request a connection
     }
     public void mEnd(){
         oSerial.mBTClose1();             //Close ports when program quit
@@ -122,17 +112,17 @@ public  class cProtocol3 {                      //This was formerly just called 
     //******************************			PROPERTIES     ************************
             //      *** REQUESTS ***
     public void mDoReset() {
-        mSetState(eProtState.kProtResetReq);
+        mSetState(cKonst.eProtState.kProtResetReq);
     }
     public void doBTPair() {
-        mSetState(eProtState.kBTDoDiscover);
+        mSetState(cKonst.eProtState.kBT_DiscoverReq);
     }
-    public void mDoConnect(String sDevice) {
+    public void mDoConnectRequest(String sDevice) {
         if (sDevice!=null)   mSetDeviceName(sDevice);
         if (oSerial.mIsDeviceResponding_Dodgy()){
             mDoReset();
         } else {
-            mSetState(eProtState.kDoConnect1);
+            mSetState(cKonst.eProtState.kBT_ConnectReq);
         }
     }                       //Request a connection
 
@@ -144,26 +134,19 @@ public  class cProtocol3 {                      //This was formerly just called 
         return nProtSize;
     };
 
-    public String mGetConnectMenuText() {
-        if (oSerial.mIsDeviceResponding_Dodgy()){
-            return "->"+ mGetDeviceName();
-        }
-        return "Connect:"+ mGetDeviceName();
-    }       //Returns a text to display on the menu
+
 
     public boolean mIsConnected() {
         return oSerial.mIsConnected();
     }
 
-    //Chain: cSerial...mFindDevices->oParent.mSetDeviceName
+    //Chain: cSerial...mBT_PickDevice->oParent.mSetDeviceName
     public void mSetDeviceName(String name) {    //  Getter setter for the portname
         sDevices1[ myIndex]=name;
         cProgram3.mPersistAllData(false);
-        mDoConnect(name);
-
     }       //Set the name of the BT device (todo clean codesmell
 
-    private String mGetDeviceName() {
+    public String mGetDeviceName() {
         return sDevices1[myIndex];
     }
 
@@ -186,59 +169,56 @@ public  class cProtocol3 {                      //This was formerly just called 
         }).start();         //Important. actually starts the process
     }
     private void mProcess_Async() {
-        if (getState()== eProtState.kProtReady){//Protocol statemachine
+        if (getState()== cKonst.eProtState.kProtReady){            //Protocol statemachine
             mRelay();       //Relay old data, get changes from client
             boolean ret = mTX_Dispatch();      //170605    Rewritten to process only datarequests
             oSerial.mProcessSerial();    //Send the request immediately
             mDispatchRX(nCmd, zState);
-            if (mIsConnected()==false) { //Appears that communication was closed
-                mSetState(eProtState.kProtUndef);    //Maybe we could retry in some time (ToDo)
-            }
-        } else if (getState()== eProtState.kDoConnect1) {
+        } else if (getState()== cKonst.eProtState.kBT_ConnectReq) {
             if (oSerial.mBTOpen()) {              //Make sure we have opened the port
                 boolean ret = oSerial.mConnect(mGetDeviceName());            //Connect to the device
                 if (ret)
-                    mSetState(eProtState.kProtResetReq);
+                    mSetState(cKonst.eProtState.kProtResetReq);
                 else
-                    mSetState(eProtState.kConnectionError);
+                    mSetState(cKonst.eProtState.kConnectionError);
             }
-        } else if (getState()== eProtState.kProtResetReq) {    //Request the protocol setup
+        } else if (getState()== cKonst.eProtState.kProtResetReq) {    //Request the protocol setup
             mTX_ProtReset();
             oSerial.mProcessSerial();    //Send the request immediately
             mSleep(100);                //Now device will start sending data
-            mSetState(eProtState.kProtInitInProgress);      //Idle mode awaiting initialization of the protocol
-        } else if (getState()== eProtState.kProtInitInProgress) {
+            mSetState(kProtInitInProgress);      //Idle mode awaiting initialization of the protocol
+        } else if (getState()==  kProtInitInProgress) {
             for (int i=0;i<100;i++) {        //Retry until success       (you are in background)
                 if (oSerial.mProcessSerial() == null) {    //When no more data, then protocol should be ready
-                    mMessage("Initializing protocol - "+ mGetProtSize() );
-                    mSetState(eProtState.kProtInitDone);    //Protocol good to use
+                    mSetState(cKonst.eProtState.kProtInitDone);    //Protocol good to use
                     bDoRedraw=true;
                     return;
                 }
                 mSleep(100);                   //Data keep coming when initialization has been requested
             }
-            mSetState(eProtState.kProtTimeOut);     //Error in receiving protocol   timed out
+            mSetState(kProtTimeOut);     //Error in receiving protocol   timed out
             mErrMsg("Timeout in protocol received");
-        } else         if (getState()== eProtState.kProtInitDone) {
-            mSetState(eProtState.kProtReady);   //Now the UI knows the protocol is ready  so display can be refreshed
-        } else        if (getState()== eProtState.kBTDoDiscover){
-            oSerial.mFindDevices((Context) oFocusdActivity);
-            mSetState(eProtState.kBTDiscoverInProgress);
-        } else if (getState()== eProtState.kBTDiscoverInProgress){
-            if (oSerial.mConnectionState()== cSerial5.eState.kTryToConnect)   //Pairing has been done
-                mDoConnect(mGetDeviceName());                           //Now try to mConnect
-         } else if (getState()== eProtState.kDoConnect_step2)  {
-            if (oSerial.nSerialState== kConnected) {
-                mSetState(eProtState.kProtResetReq);
+        } else         if (getState()== kProtInitDone) {
+            mSetState(kProtReady);   //Now the UI knows the protocol is ready  so display can be refreshed
+        } else        if (getState()== kBT_DiscoverReq){
+            oSerial.mBT_PickDevice((Context) oFocusdActivity);
+            mSetState(kBTDiscoverInProgress);
+        } else if (getState()== kBTDiscoverInProgress){
+            bDoRedraw=true;
+            if (oSerial.mIsState( cKonst.eSerial.kTryToConnect))   //Pairing has been done
+                mDoConnectRequest(mGetDeviceName());                           //Now try to mConnect
+         } else if (getState()== kDoConnect_step2)  {
+            if (oSerial.mStateGet() == cKonst.eSerial.kBT_Connected) {
+                mSetState(kProtResetReq);
             }
-            else if (oSerial.nSerialState == kConnectionError) {
-                mSetState(eProtState.kBTUnavailable);
+            else if (oSerial.mStateGet()== cKonst.eSerial.kConnectionError) {
+                mSetState(kBTUnavailable);
             }
         }
-        else if (oSerial.nSerialState == kBrokenConnection) {
+        else if (oSerial.mStateGet()== cKonst.eSerial.kBrokenConnection) {
             mSleep(5000);       //Do nothing while connection was interrupted
         }
-        else if (oSerial.mConnectionState()== cSerial5.eState.kOverflow){
+        else if (oSerial.mConnectionState()== cKonst.eSerial.kOverflow){
             mReset_Buffers();
             oSerial.mConnectionStateClear();
         }
@@ -323,7 +303,7 @@ public  class cProtocol3 {                      //This was formerly just called 
                     break;
                 case kError:
                     mErrMsg("Error in protocol");
-                    mSetState(eProtState.kProtError);
+                    mSetState(kProtError);
                     nCmd[0]=kReady2;
                     break;
                 case kCommInit:        //A protocol initialization element is to be received
@@ -480,7 +460,7 @@ public  class cProtocol3 {                      //This was formerly just called 
     private boolean bElem_IsValid(cProtElem oRXGetReqElem) {
         if (null==oRXGetReqElem){
             mErrMsg("Fatal error ID not found Error in mGETreqRxt!");
-            mSetState(eProtState.kProtError);  //Set a request to device for the protocol  R170314
+            mSetState(kProtError);  //Set a request to device for the protocol  R170314
             return false; //this is an error
         }
         return true;
@@ -528,11 +508,12 @@ public  class cProtocol3 {                      //This was formerly just called 
     }
 
     //      Get set the status of the protocol, ready, idle etc.
-    public eProtState getState() {
+    public cKonst.eProtState getState() {
         return nProtState;
     }
-    public void mSetState(eProtState newState) {      //!!!Refactor to enum
+    public void mSetState(cKonst.eProtState newState) {      //!!!Refactor to enum
         nProtState=newState;
+        bDoRedraw=true;             //171012    A changed state will require a display redraw
     }
 
     void mSendElementData2Client(cRelay2Client oTX, int nVarId){    //Send 32 bit data from element[nVarId].data to client
@@ -633,9 +614,9 @@ public  class cProtocol3 {                      //This was formerly just called 
     }
 
     private void mAutoReconnect() {
-        if (oSerial.mConnectionState()== kConnected) {
+        if (oSerial.mConnectionState()== cKonst.eSerial.kBT_Connected) {
             if (mWait(60))                  //170929 Retry connection after some time
-                mSetState(eProtState.kDoConnect1);
+                mSetState(kBT_ConnectReq);
         }
     }
     private boolean mIsDeviceProtocolReady() {  //Returns true if the protocol is initialized from device
