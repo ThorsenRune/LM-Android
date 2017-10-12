@@ -110,6 +110,7 @@ public class cSerial5 {
     public cKonst.eSerial mStateGet() {
         return nState_Serial_;
     }
+
     public boolean mIsState(cKonst.eSerial nCheckState) {
         return nCheckState==nState_Serial_;
     }
