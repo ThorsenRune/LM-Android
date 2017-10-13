@@ -614,7 +614,6 @@ public  class cProtocol3 {                      //This was formerly just called 
         }
         return true;
     }
-
 }
 
 
