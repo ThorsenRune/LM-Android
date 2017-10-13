@@ -19,6 +19,7 @@ import java.util.ArrayList;
 
 import static it.fdg.lm.cAndMeth.mMatchChildVisibility;
 import static it.fdg.lm.cAndMeth.mSetVisibility;
+import static it.fdg.lm.cProgram3.mMessage;
 import static it.fdg.lm.cProgram3.mMsgDebug;
 import static it.fdg.lm.cProgram3.mPersistAllData;
 import static it.fdg.lm.cProgram3.mRefreshRate;
@@ -204,33 +205,10 @@ public class fMain extends BaseActivity {
     @Override
     public void onBackPressed() {       //Some black magic asking user how to quit, saving/not saving data
         cProgram3.mEndProgram();
-        //mAlert(mContext,"Ending program");
+        mMessage("Ending program");
         finish();
         super.onBackPressed();
 
-
-/*        new AlertDialog.Builder(this)
-               .setIcon(android.R.drawable.ic_dialog_alert)
-               .setTitle("Closing Activity")
-               .setMessage("Save settings?")
-               .setPositiveButton("Yes", new DialogInterface.OnClickListener()
-               {
-                   @Override
-                   public void onClick(DialogInterface dialog, int which) {
-                       mPersistAllData(false);        //Save settings
-                       finish();
-                   }
-
-               })
-               .setNegativeButton("No",new DialogInterface.OnClickListener()
-               {
-                   @Override
-                   public void onClick(DialogInterface dialog, int which) {
-                       finish();
-                   }
-               })
-               .show();
-               */
     }
 
     @Override

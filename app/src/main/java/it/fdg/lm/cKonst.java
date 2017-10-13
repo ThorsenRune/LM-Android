@@ -11,8 +11,13 @@ public class cKonst {
         kBT_Connected,             //Good connection
         kBT_Undefined,            //Unconnected
          // following cKonst.eProtState.kConnectionError
-        kBT_TimeOut,  kConnectionError,kTryToConnect, kBrokenConnection, kDisconnected, kDeviceNotFound, kBT_ConnectRequest, kDevicePickerActive, kListening, kListenAccepted,
-        kOverflow, kDevicePickerClosed;
+        kBT_TimeOut,
+        kDevicePickerActive, kDevicePickerClosed,       //State of discovery
+         kConnectionError,
+         kTryToConnect,
+         kBrokenConnection,             //Device switched off !+ ideally we should listen for when it switches on again
+         kDisconnected,  kBT_ConnectRequest, kListening, kListenAccepted,
+         kOverflow;
       }
 
     public enum eNum {     //Application properties enumerator

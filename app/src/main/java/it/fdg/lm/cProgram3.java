@@ -163,7 +163,7 @@ public final class cProgram3 {
 
     public static void mEndProgram(){    //Shut down gracefully    */
         for (int i=0;i<oProtocol.length;i++){       //For each device
-            oProtocol[i].mEnd();                //Close bluetooth ports
+            oProtocol[i].mEnd();                    //Close bluetooth ports
         }
         // mDefault4App(true);
     }           //(Meagre)   Gracefully shut down the application

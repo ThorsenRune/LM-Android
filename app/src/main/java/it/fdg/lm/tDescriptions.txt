@@ -12,9 +12,13 @@ Cleaning process
 	cSerial5	171004
 	cProtocol3	171004
 
+
+METHOD CHAINS
 Entry points:
- fmain.onCreate->mEntryPoint				//Principal entry point
- cProgram3.mCommunicate(true)->mPeriodicProcessing			//Activate communication with device
+* fmain.onCreate->mEntryPoint				//Principal entry point
+* cProgram3.mCommunicate(true)->mPeriodicProcessing			//Activate communication with device
+
+
 
 mProtocolPrepare-> oProtocol[i].mInit
 
@@ -226,3 +230,27 @@ private static void mAlignProtocolLengthWithDevicesCount() {
 	}
 
 }
+
+
+/*        new AlertDialog.Builder(this)
+               .setIcon(android.R.drawable.ic_dialog_alert)
+               .setTitle("Closing Activity")
+               .setMessage("Save settings?")
+               .setPositiveButton("Yes", new DialogInterface.OnClickListener()
+               {
+                   @Override
+                   public void onClick(DialogInterface dialog, int which) {
+                       mPersistAllData(false);        //Save settings
+                       finish();
+                   }
+
+               })
+               .setNegativeButton("No",new DialogInterface.OnClickListener()
+               {
+                   @Override
+                   public void onClick(DialogInterface dialog, int which) {
+                       finish();
+                   }
+               })
+               .show();
+               */

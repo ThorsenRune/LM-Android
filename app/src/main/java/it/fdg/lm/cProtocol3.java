@@ -13,19 +13,8 @@ import java.io.OutputStream;
 import static it.fdg.lm.cAndMeth.mSleep;
 import static it.fdg.lm.cFunk.mInt2ByteArray;
 import static it.fdg.lm.cKonst.eProtState.*;
-import static it.fdg.lm.cKonst.eProtState.kBTUnavailable;
-import static it.fdg.lm.cKonst.eProtState.kBT_ConnectReq;
-import static it.fdg.lm.cKonst.eProtState.kBT_DiscoverReq;
-import static it.fdg.lm.cKonst.eProtState.kDoConnect_step2;
-import static it.fdg.lm.cKonst.eProtState.kProtError;
-import static it.fdg.lm.cKonst.eProtState.kProtInitDone;
-import static it.fdg.lm.cKonst.eProtState.kProtInitInProgress;
-import static it.fdg.lm.cKonst.eProtState.kProtReady;
-import static it.fdg.lm.cKonst.eProtState.kProtResetReq;
-import static it.fdg.lm.cKonst.eProtState.kProtTimeOut;
 import static it.fdg.lm.cProgram3.bDoRedraw;
 import static it.fdg.lm.cProgram3.mErrMsg;
-import static it.fdg.lm.cProgram3.oFocusdActivity;
 import static it.fdg.lm.cProgram3.sDevices1;
 
 
@@ -175,12 +164,11 @@ public  class cProtocol3 {                      //This was formerly just called 
             oSerial.mProcessSerial();    //Send the request immediately
             mDispatchRX(nCmd, zState);
         } else if (getState()== cKonst.eProtState.kBT_ConnectReq) {
-            if (oSerial.mBTOpen()) {              //Make sure we have opened the port
-                boolean ret = oSerial.mConnect(mGetDeviceName());            //Connect to the device
-                if (ret)
-                    mSetState(cKonst.eProtState.kProtResetReq);
-                else
-                    mSetState(cKonst.eProtState.kConnectionError);
+            oSerial.mConnect(mGetDeviceName());            //Connect to the device
+            if (oSerial.mIsState(cKonst.eSerial.kBT_Connected)){
+                mSetState(cKonst.eProtState.kProtResetReq);
+            }else if (oSerial.mIsState(cKonst.eSerial.kConnectionError)){
+                mSetState(cKonst.eProtState.kConnectionError);
             }
         } else if (getState()== cKonst.eProtState.kProtResetReq) {    //Request the protocol setup
             mTX_ProtReset();
@@ -188,20 +176,17 @@ public  class cProtocol3 {                      //This was formerly just called 
             mSleep(100);                //Now device will start sending data
             mSetState(kProtInitInProgress);      //Idle mode awaiting initialization of the protocol
         } else if (getState()==  kProtInitInProgress) {
-            for (int i=0;i<100;i++) {        //Retry until success       (you are in background)
-                if (oSerial.mProcessSerial() == null) {    //When no more data, then protocol should be ready
-                    mSetState(cKonst.eProtState.kProtInitDone);    //Protocol good to use
-                    bDoRedraw=true;
-                    return;
-                }
-                mSleep(100);                   //Data keep coming when initialization has been requested
-            }
-            mSetState(kProtTimeOut);     //Error in receiving protocol   timed out
-            mErrMsg("Timeout in protocol received");
+            bDoRedraw=true;
+             if (oSerial.mProcessSerial() == null) {
+                 mSleep(100);                   //Data keep coming when initialization has been requested
+             }
+            mDispatchRX(nCmd, zState);
+            if (mIsDeviceProtocolReady())
+                  mSetState(cKonst.eProtState.kProtInitDone);    //Protocol good to use
         } else         if (getState()== kProtInitDone) {
             mSetState(kProtReady);   //Now the UI knows the protocol is ready  so display can be refreshed
         } else        if (getState()== kBT_DiscoverReq){
-            oSerial.mBT_PickDevice((Context) oFocusdActivity);
+            oSerial.mBT_PickDevice();
             mSetState(kBTDiscoverInProgress);
         } else if (getState()== kBTDiscoverInProgress){
             bDoRedraw=true;
@@ -518,6 +503,7 @@ public  class cProtocol3 {                      //This was formerly just called 
 
     void mSendElementData2Client(cRelay2Client oTX, int nVarId){    //Send 32 bit data from element[nVarId].data to client
         cProtElem oElem = mProtDataObjById(nVarId);
+        if (oElem==null) {mErrMsg("mSendElementData2Client empty");return;}
         OutputStream os = oTX.oOutputStream;
         int nCount = oElem.nDataLength();
         oTX.mWriteByte(oTX.oOutputStream, k32BitInt); // xmit header cProtocol.h {   k32BitInt=232}
@@ -597,6 +583,7 @@ public  class cProtocol3 {                      //This was formerly just called 
         if (mGetBytesAvailable(oInputStream)<1) return false;		//Cant process yet
         int nVarId = oSerial.mReadByte2(oInputStream);        //Expect ID and increase its send counter
         cProtElem oElem = mProtDataObjById(nVarId);
+        if (oElem==null) {mErrMsg("mSendElementData2Client empty");return false;}
        // oElem.nSetReqCntr++; //Make it send  Obviously this is a problem because it makes it send to device not to client
         mSendElementData2Client(oSerial.oBTServer,nVarId);
         return true;										//Completed state

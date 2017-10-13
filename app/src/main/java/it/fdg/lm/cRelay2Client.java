@@ -36,7 +36,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
-import static it.fdg.lm.cProgram3.mMessage;
 import static it.fdg.lm.cProgram3.mMsgDebug;
 import static it.fdg.lm.cProgram3.mMsgLog;
 
@@ -123,8 +122,8 @@ public class cRelay2Client {
                          oInputStream = oSocketClient.getInputStream();
                          oOutputStream = oSocketClient.getOutputStream();
                          mSetState(cKonst.eSerial.kBT_Connected);
-                         mMessage("Connected to " + oSocketClient.getRemoteDevice().getName());
                      } catch (IOException e) {
+                         mSetState(cKonst.eSerial.kBT_TimeOut);
                          mMsgLog( "temp sockets not created"+ e);
                      }
 
