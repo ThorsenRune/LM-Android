@@ -103,7 +103,7 @@ public class cAndMeth extends Activity{
     }
     public static void mSetVisibility(View w,int nTriState) {  //170822
         //0: not there,  1: visible , 2 invisible placeholder
-        if (mInt2Bool(mAppProps(cKonst.eNum.kShowHidden)))
+        if (mInt2Bool(mAppProps(cKonst.eSettings.kShowHidden)))
             w.setVisibility(View.VISIBLE);
         else if (nTriState==0)
             w.setVisibility(View.GONE);

@@ -210,7 +210,7 @@ public  class cElemViewProps {
         if (bDesignMode())  v.setVisibility(View.VISIBLE);
         else if( bVisible())v.setVisibility(View.VISIBLE);
         else v.setVisibility(View.GONE);
-        if (mInt2Bool(mAppProps(cKonst.eNum.kShowHidden))) {
+        if (mInt2Bool(mAppProps(cKonst.eSettings.kShowHidden))) {
             v.setBackgroundResource(R.drawable.backborder);
         }
     }

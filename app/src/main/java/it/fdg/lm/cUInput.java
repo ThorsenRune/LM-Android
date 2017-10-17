@@ -39,17 +39,18 @@ import static it.fdg.lm.cFunk.mStr2Float;
 import static it.fdg.lm.cFunk.mStr2Int;
 import static it.fdg.lm.cFunk.mStr2StrArr;
 import static it.fdg.lm.cFunk.mStrArr2Str;
-import static it.fdg.lm.cKonst.eProtState.kBTDiscoverInProgress;
-import static it.fdg.lm.cKonst.eProtState.kBT_ConnectReq;
-import static it.fdg.lm.cKonst.eProtState.kBT_DiscoverReq;
-import static it.fdg.lm.cKonst.eProtState.kConnectionError;
+import static it.fdg.lm.cKonst.eSettings.*;
 import static it.fdg.lm.cKonst.eProtState.kProtInitDone;
 import static it.fdg.lm.cKonst.eProtState.kProtInitInProgress;
-import static it.fdg.lm.cKonst.eProtState.kProtResetReq;
-import static it.fdg.lm.cKonst.eProtState.kProtUndef;
-import static it.fdg.lm.cKonst.eSerial.kBT_Connected;
+import static it.fdg.lm.cKonst.eProtState.kProtResetReq1;
+import static it.fdg.lm.cKonst.eProtState.kProtUndef1;
+import static it.fdg.lm.cKonst.eSerial.kBT_BrokenConnection;
+import static it.fdg.lm.cKonst.eSerial.kBT_ConnectReq1;
+import static it.fdg.lm.cKonst.eSerial.kBT_Connected1;
+import static it.fdg.lm.cKonst.eSerial.kBT_DevicePickerActive;
+import static it.fdg.lm.cKonst.eSerial.kBT_InvalidDevice1;
 import static it.fdg.lm.cKonst.eSerial.kBT_TimeOut;
-import static it.fdg.lm.cKonst.eSerial.kBrokenConnection;
+import static it.fdg.lm.cKonst.eSerial.kDeviceWasSelected;
 import static it.fdg.lm.cProgram3.bDoRedraw;
 import static it.fdg.lm.cProgram3.mErrMsg;
 import static it.fdg.lm.cProgram3.mPersistAllData;
@@ -127,15 +128,14 @@ public class cUInput {
 //            mLayoutAddCheckbox(2, "Relay", nCurrentProtocol==nRelayProtocol);
             mLayoutAddCmd(2,"Other devices").setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {       //R170627
-                    oProtocol[nCurrentProtocol].doBTPair();
+                    oProtocol[nCurrentProtocol].mBT_PickDevice1();
                     mAlertDialog.dismiss();
                 }
             });
             mDialogSetup1("Select device");             //Prepare dialog layout
         }else {       // Callback Get the fields from the editbox
             String devName = mGetText(inCB[1]);
-  //          if (cbCheck[2].isChecked()) {
-            oProtocol[nCurrentProtocol].mDoConnectRequest(devName);
+            mProtocol().mConnectNamedDevice(devName);
             myEditType= eEditType.kNull;
             return;
         }
@@ -188,6 +188,8 @@ public class cUInput {
     }
 
     private static cProtocol3 mProtocol() {     //Return the current protocol
+        if (oElemViewProps==null)
+            return  oProtocol[nCurrentProtocol];
         return oElemViewProps.mProtocol();
     }
 
@@ -379,7 +381,7 @@ public class cUInput {
                 mLayoutAddTextEdit(0,"Value",(int)oElemViewProps.mGetValue());
             else
                 mLayoutAddTextEdit(0,"Value",oElemViewProps.mGetValue());
-            if (cProgram3.nAppProps[cKonst.eNum.kPrivileges.ordinal()]>0) {
+            if (cProgram3.nUserLevel()>0) {
                 mLayoutAddTextEdit(1, "Raw Data", oElemViewProps.mRawValue());
                 txtEdit[1].setEnabled(false);
             }
@@ -441,29 +443,45 @@ public class cUInput {
 	*/
         if (!(oFocusdActivity instanceof fMain)) return;	//Only on mainscreen
 //	Undefined protocol
-        if (mIsStateProtocol(kConnectionError)) {               //171012    Linked with mProcess_Async
-            cmdText(txtConnectionError());
-            if (bExecute) mTryToConnect();
-        }else if ( mIsStateProtocol(kProtResetReq)) {
+        if (!mIsStateSerial1(kBT_Connected1)) {               //171012    Not connected
+            if (mIsStateSerial1(kBT_ConnectReq1)) {                //Timeout
+                cmdText(cKonst.eTexts.txtDevice_Connecting);
+                if (bExecute) mProtocol().oSerial.mBT_PickDevice1();
+            }else if (mIsStateSerial1(kBT_InvalidDevice1)){                //Invalid device
+                cmdText("Select a device - press");
+                if (bExecute) mProtocol().oSerial.mBT_PickDevice1();
+            }else if (mIsStateSerial1(kBT_TimeOut)){                //Timeout
+                cmdText(cKonst.eTexts.txtDevice_TimeOut);
+                if (bExecute) mProtocol().mProtResetReq();
+            }else if (mIsStateSerial1(kBT_BrokenConnection)){                //Timeout
+                cmdText("Lost connection");
+                if (0<nAppProps[kAutoConnect.ordinal()])
+                    mTryToConnect();
+                if (bExecute)mTryToConnect();
+            }else if ( mIsStateSerial1(kBT_DevicePickerActive)) {
+                cmdText("Select a device ");
+                if (bExecute) mTryToConnect();
+            }else if ( mIsStateSerial1(kDeviceWasSelected)) {
+                String s=mProtocol().mDeviceNameGet();
+                mProtocol().mConnectNamedDevice(s);          //  Will initiate a connection
+            } else {
+                cmdText(txtConnectionError());
+                if (bExecute) mTryToConnect();
+            }
+        }else if ( mIsStateProtocol(kProtResetReq1)) {
             cmdText("Resetting Protocol "+ nTestCount[0]);
-        }else if ( mIsStateProtocol(kBTDiscoverInProgress)) {
-            cmdText("Select a device ");
-            if (bExecute) mTryToConnect();
+
         }else if ( mIsStateProtocol(kProtInitDone)) {
             cmdText("Protocol Ready "+ nTestCount[0]);
-        }else if ( mIsStateProtocol(kProtUndef)) {
-            cmdText("Undefined connection "+ nTestCount[0]);
+        }else if ( mIsStateProtocol(kProtUndef1)) {
+            cmdText("Undefined Protocol "+ nTestCount[0]);
+            if (bExecute) mTryToConnect();
         }else if (mIsStateProtocol(kProtInitInProgress)) {
             cmdText(cKonst.eTexts.txtDevice_Initializing+" "+  oProtocol[nCurrentProtocol].mGetProtSize() );
-            if (bExecute) mProtStateSet(kBT_ConnectReq);
-        }else if (mIsStateSerial1(kBT_TimeOut)){
-            cmdText(cKonst.eTexts.txtDevice_TimeOut);
-            if (bExecute)mTryToConnect();
+            if (bExecute) mTryToConnect();
         }else if (sErrMsg!=null) {                          //Error was encountered tell the user
             cmdText(sErrMsg);
-            if (bExecute) mProtStateSet(kProtResetReq);
-        }else if (mIsStateProtocol(kBT_ConnectReq)){
-            cmdText(cKonst.eTexts.txtDevice_Connecting+mGetDeviceName());
+            if (bExecute) mProtocol().mProtResetReq();
         }else if (mGetElemObj()!= null) {
             cmdText(oElemViewProps.mDescr());
             if (bExecute) mInputValue(true);
@@ -473,8 +491,8 @@ public class cUInput {
     }
 
     private static String txtConnectionError() {
-        if (mIsStateSerial1(kBrokenConnection)){
-            return "Device lost connection, switched off?";
+        if (mIsStateSerial1(kBT_BrokenConnection)){
+            return cKonst.eTexts.txtDevice_LostContact;
         }else if (mIsStateSerial1(kBT_TimeOut)){
             return (cKonst.eTexts.txtDevice_TimeOut);
         } else {
@@ -482,34 +500,26 @@ public class cUInput {
         }
     }
 
-    private static boolean mIsStateSerial1(cKonst.eSerial nSerialState) {
+    protected static boolean mIsStateSerial1(cKonst.eSerial nSerialState) {
         cKonst.eSerial v = oProtocol[nCurrentProtocol].oSerial.mStateGet();
         return nSerialState== v;
     }
 
     private static void mTryToConnect() {
-        nButtonPressCount=(nButtonPressCount+1)%5;
-        if (nButtonPressCount <3)
-            mProtStateSet(kBT_ConnectReq);
-        else
-            mProtStateSet(kBT_DiscoverReq);
 
-    }
-
-    private static String mGetDeviceName() {
-        return sDevices1[nCurrentProtocol] ;
+        mProtocol().mProtResetReq();
     }
 
     private static void mProtStateSet(cKonst.eProtState nNewState) {
-        oProtocol[nCurrentProtocol].mSetState(nNewState);
+        oProtocol[nCurrentProtocol].mStateSet(nNewState);
     }
 
     private static boolean mIsStateProtocol(cKonst.eProtState nProtState) {
-        if (mIsStateSerial1(kBT_Connected))
+        if (mIsStateSerial1(kBT_Connected1))
             return nProtState==oProtocol[nCurrentProtocol].getState();
         else {        //DO a check of states
-            if (mIsStateSerial1(kBrokenConnection))
-                mProtStateSet(kConnectionError);
+            if (mIsStateSerial1(kBT_BrokenConnection))
+                mProtocol().mProtResetReq();
         }
         return nProtState==oProtocol[nCurrentProtocol].getState();
     }
@@ -909,10 +919,10 @@ public class cUInput {
         if (bAsk) {
             myEditType= eEditType.kUserLevel;
             mLinLayPrep2();
-            mLayoutAddDropDown1(1,"Type",lstStr,nAppProps[cKonst.eNum.kPrivileges.ordinal()]);
+            mLayoutAddDropDown1(1,"Type",lstStr,nAppProps[cKonst.eSettings.kPrivileges.ordinal()]);
             mDialogSetup1("Select user level");             //Prepare dialog layout
         }else {       // Callback Get the fields from the editbox
-            nAppProps[cKonst.eNum.kPrivileges.ordinal()]= mLayout_DropDown_SelIdx(1);
+            nAppProps[cKonst.eSettings.kPrivileges.ordinal()]= mLayout_DropDown_SelIdx(1);
             myEditType= eEditType.kNull;
             mPersistAllData(false);         //Remember new setting
             return;

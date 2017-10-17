@@ -190,8 +190,8 @@ public class cBitField extends BaseActivity {
             if (mnuClick(nId, "Control:"+ cUInput.oCtrlID(), cUInput.mSelected())) {
                 cUInput.mInputViewSettings1(true); //Associate element with widget
             }
-            if (mnuCheck(nId, "Design mode",mInt2Bool(mAppProps(cKonst.eNum.kShowHidden)))) { //Will show all hidden controls
-                mAppPropsToggle(cKonst.eNum.kShowHidden);   cProgram3.bDoRedraw=true;         //Clicked action
+            if (mnuCheck(nId, "Design mode",mInt2Bool(mAppProps(cKonst.eSettings.kShowHidden)))) { //Will show all hidden controls
+                mAppPropsToggle(cKonst.eSettings.kShowHidden);   cProgram3.bDoRedraw=true;         //Clicked action
             }
             if (mnuClick(nId, "Settings file")) {
                 mDispSettings();

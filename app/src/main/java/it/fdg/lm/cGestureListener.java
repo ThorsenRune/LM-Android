@@ -24,7 +24,7 @@ package it.fdg.lm;
         public static int[] nFlingDir ={0,0};
         public static float nX,nY;
 
-        public static boolean isScrollingBlocked = cFunk.mInt2Bool(mAppProps(cKonst.eNum.kBlockScrolling))  ;        //Blocks scrollveiws
+        public static boolean isScrollingBlocked = cFunk.mInt2Bool(mAppProps(cKonst.eSettings.kBlockScrolling))  ;        //Blocks scrollveiws
         static boolean bLongPress=false;
         static boolean bDoubleTap=false;
         static boolean bFling;

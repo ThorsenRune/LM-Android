@@ -53,12 +53,12 @@ public class fMain extends BaseActivity {
     public  static void mInit(Context mainContext){     //cProgram3
         if (oProtocol!=null)
             return;        //Return if its not the first call (second calls could be caused by rotating the device)
-//        mContext=mainContext;
+        cProgram3.mContext=mainContext;
         cFileSystem.mInit(mainContext);
         //Prepare the protocols
         mPersistAllData(true);         //onCreate
-//!- obsolete        oProtocol[nCurrentProtocol].mDoConnectRequest(null);      //170912 Autoconnect at user privileges
-        cProgram3.mAppPropsSet(cKonst.eNum.kRefreshRate,2000);
+        cProgram3.nUserLevel(0);        //Remove privileges as default
+        cProgram3.mAppPropsSet(cKonst.eSettings.kRefreshRate,2000);
     }
     private void mInitControls() {      //Setup widget references for this display
   /*     initiate  views        */

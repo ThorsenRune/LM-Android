@@ -13,12 +13,12 @@ import static it.fdg.lm.cFileSystem.readRawTextFile;
 import static it.fdg.lm.cFunk.mInt2Bool;
 import static it.fdg.lm.cGestureListener.nSignalPaneHeight;
 import static it.fdg.lm.cProgram3.mErrMsg;
+import static it.fdg.lm.cProgram3.mProtocol;
 import static it.fdg.lm.cProgram3.mRefreshRate;
 import static it.fdg.lm.cProgram3.nCurrentProtocol;
 import static it.fdg.lm.cProgram3.nUserLevel;
 import static it.fdg.lm.cProgram3.oFocusdActivity;
 import static it.fdg.lm.cProgram3.oProtocol;
-import static it.fdg.lm.cProgram3.sDevices1;
 import static it.fdg.lm.cUInput.mFocusedPanel;
 import static it.fdg.lm.fMain.fPanelSignals;
 
@@ -72,19 +72,19 @@ public class BaseActivity extends AppCompatActivity {
             cSlider.mShow(mIsHidden(mySignal));
         }
         */
-        if (mnuClick(nId,"Control page "+ cProgram3.nWatchPage)){
+        if (mnuClick(nId,cKonst.eTexts.txtMenuViewLayout )){
             cProgram3.nWatchPage=((cProgram3.nWatchPage+1)%2);
             cProgram3.bDoRedraw=true;
         }
         if (mnuClick(nId,"Mode settings")){
             mBitFields_Show();
         }
-        if (cProgram3.bAdmin()) {            //170728    Advanced permissions
+        if (cProgram3.nUserLevel()==cKonst.kUserAdmin) {            //170728    Advanced permissions
             if (mnuClick(nId, "Control:"+ cUInput.oCtrlID(), cUInput.mSelected())) {
                 cUInput.mInputViewSettings1(true); //Associate element with widget
             }
-            if (mnuCheck(nId, "Design mode", mInt2Bool(cProgram3.mAppProps(cKonst.eNum.kShowHidden)))) {
-                cProgram3.mAppPropsToggle(cKonst.eNum.kShowHidden);   cProgram3.bDoRedraw=true;         //Clicked action
+            if (mnuCheck(nId, "Design mode", mInt2Bool(cProgram3.mAppProps(cKonst.eSettings.kShowHidden)))) {
+                cProgram3.mAppPropsToggle(cKonst.eSettings.kShowHidden);   cProgram3.bDoRedraw=true;         //Clicked action
             }
             if (mnuClick(nId, "Settings")) {
                 mDispSettings();
@@ -125,18 +125,14 @@ public class BaseActivity extends AppCompatActivity {
         nMnuCount=0; //   Reset menucounter
         //NOw the Connection menu
         if (mnuMain(nId, mGetConnectMenuText())) {    //Make a connection, 3 clicks to
-            cProtocol3 prot = oProtocol[0];
             cProgram3.mCommunicate(true);
-            if (prot.mIsConnected())            //Just reset protocol
-                prot.mDoReset();
-            else                                //if not connected do connections
-                prot.mDoConnectRequest(sDevices1[0]);
+            mProtocol().mProtResetReq();
         }
         mRefreshRate(500);
     }
 
     private static String mGetConnectMenuText() {
-            String title = oProtocol[nCurrentProtocol].mGetDeviceName();
+            String title = oProtocol[nCurrentProtocol].mDeviceNameGet();
             return title;
         }       //Returns a text to display on the menu
 
@@ -185,16 +181,12 @@ public class BaseActivity extends AppCompatActivity {
     public static boolean menuFindBTDevice(int nId) {
         if (mnuClick(nId,"Find BT device"))          //R170725
         {
-            mBT_DeviceSelect();
-           // cUInput.mInputSelectDevice(true);
+            cProgram3.mProtocol().mBT_PickDevice1();
             return true;
         }
         return false;
     }
 
-    private static void mBT_DeviceSelect() {
-        oProtocol[nCurrentProtocol].doBTPair();
-    }
 
 
     //  --------------------------  SYSTEM CALLS ---------------------------------------

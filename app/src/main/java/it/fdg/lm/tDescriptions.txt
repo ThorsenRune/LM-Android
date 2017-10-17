@@ -60,8 +60,6 @@ mProtocolPrepare-> oProtocol[i].mInit
 		so you can remotely monitor and control a user.Hierachy Client->server->device
 		*
 		mConnect2Device->mConnect2Device_Sub
-		//Make the serial connection
-
 
 		*
 		*

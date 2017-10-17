@@ -28,8 +28,8 @@ import static it.fdg.lm.cFunk.mArrayFind;
 import static it.fdg.lm.cFunk.mArrayRedim;
 import static it.fdg.lm.cFunk.mInt2Bool;
 import static it.fdg.lm.cFunk.mLimit;
-import static it.fdg.lm.cKonst.eNum.kPrivileges;
-import static it.fdg.lm.cKonst.eNum.kRefreshRate;
+import static it.fdg.lm.cKonst.eSettings.kPrivileges;
+import static it.fdg.lm.cKonst.eSettings.kRefreshRate;
 import static java.lang.Thread.currentThread;
 
 ;
@@ -59,16 +59,16 @@ public final class cProgram3 {
 //            mMessage("New refresh rate " +nRefreshRate);
     }}
     public  static int mRefreshRate(){return nRefreshRate;}
-    public static int mAppProps(cKonst.eNum kEnum) {
+    public static int mAppProps(cKonst.eSettings kEnum) {
         int n=kEnum.ordinal();
         if (nAppProps.length<=n)
             nAppProps=mArrayRedim(nAppProps,n);     //Make sure that there is room of index n
         return  nAppProps[n];
     }
-    public static void mAppPropsSet(cKonst.eNum kEnum, int i) {
+    public static void mAppPropsSet(cKonst.eSettings kEnum, int i) {
         nAppProps[kEnum.ordinal()]=i;
     }
-    public static void mAppPropsToggle(cKonst.eNum kEnum) {
+    public static void mAppPropsToggle(cKonst.eSettings kEnum) {
         nAppProps[kEnum.ordinal()]=(nAppProps[kEnum.ordinal()]+1)%2;
     }
 
@@ -85,7 +85,7 @@ public final class cProgram3 {
 
 
     public static boolean bDesignMode(){
-        return mInt2Bool(mAppProps(cKonst.eNum.kShowHidden));
+        return mInt2Bool(mAppProps(cKonst.eSettings.kShowHidden));
     }
     static int[] nPalette={0};
     public static int nWatchPage=0;
@@ -121,28 +121,19 @@ public final class cProgram3 {
     public static int nUserLevel() {
         return ( nAppProps[kPrivileges.ordinal()]);
     }
+    public static void nUserLevel(int i) {
+        nAppProps[kPrivileges.ordinal()]=i;
+    }
     public static boolean nUserLevel1(int level) {
         int bitmask = nAppProps[kPrivileges.ordinal()];
         return (0<( bitmask&level ));
     }
+
     //          METHODS
-
-    public  static void mInit(Context mainContext){     //cProgram3
-        if (oProtocol!=null)
-            return;        //Return if its not the first call (second calls could be caused by rotating the device)
-        mContext=mainContext;
-        cFileSystem.mInit(mainContext);
-        //Prepare the protocols
-        mPersistAllData(true);         //onCreate
-        //!-if (mAppProps(cKonst.eNum.kAutoConnect)>0)      moved to cProtocol3 171012
-            oProtocol[nCurrentProtocol].mDoConnectRequest(null);      //170912 Autoconnect at user privileges
-        cProgram3.mAppPropsSet(kRefreshRate,2000);
-    }
-
     protected static void mCommunicate(boolean bRunPause) {       //Avoid that this is called multiple times
         if (bRunPause)    //Enable
             bRunning=bRunPause;
-            mPeriodicProcessing.run();      //Start the timer
+        mPeriodicProcessing.run();      //Start the timer
     }       //set Run/Pause of device communication
 
     public static void mRedraw() {  //// Redraw displays
@@ -332,6 +323,10 @@ public final class cProgram3 {
     }
     public static int[] mGetPalette() {
         return nPalette;
+    }
+
+    public static cProtocol3 mProtocol() {
+        return oProtocol[nCurrentProtocol];
     }
 }
 /*
