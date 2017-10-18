@@ -10,13 +10,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import static it.fdg.lm.cAndMeth.mSetVisibility;
-import static it.fdg.lm.cFunk.mInt2Bool;
 import static it.fdg.lm.cFunk.mInt2str;
 import static it.fdg.lm.cFunk.mStr2Int;
 import static it.fdg.lm.cProgram3.bAdmin;
 import static it.fdg.lm.cProgram3.getElementViewById;
-import static it.fdg.lm.cProgram3.mAppProps;
-import static it.fdg.lm.cProgram3.mAppPropsToggle;
 
 public class cBitField extends BaseActivity {
     private CheckBox[] cb=new CheckBox[32];
@@ -190,16 +187,13 @@ public class cBitField extends BaseActivity {
             if (mnuClick(nId, "Control:"+ cUInput.oCtrlID(), cUInput.mSelected())) {
                 cUInput.mInputViewSettings1(true); //Associate element with widget
             }
-            if (mnuCheck(nId, "Design mode",mInt2Bool(mAppProps(cKonst.eSettings.kShowHidden)))) { //Will show all hidden controls
-                mAppPropsToggle(cKonst.eSettings.kShowHidden);   cProgram3.bDoRedraw=true;         //Clicked action
-            }
+
             if (mnuClick(nId, "Settings file")) {
                 mDispSettings();
             }
         }
         myMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "______________________________________").setEnabled(false);
-        if (mnuClick(nId,"User permissions"))          //R170725
-            cUInput.mUserLevel(true);
+
         return false;
     }
 

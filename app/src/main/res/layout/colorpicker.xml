@@ -68,7 +68,8 @@
         android:layout_height="match_parent"
         android:layout_weight="0.5"
         android:layout_gravity="center"
-        android:id="@+id/idPaneVerticalSliders1">
+
+        >
         <RelativeLayout
             android:id="@+id/idparent3"
             android:layout_width="match_parent"

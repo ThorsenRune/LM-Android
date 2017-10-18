@@ -19,6 +19,7 @@ import java.util.ArrayList;
 
 import static it.fdg.lm.cAndMeth.mMatchChildVisibility;
 import static it.fdg.lm.cAndMeth.mSetVisibility;
+import static it.fdg.lm.cFunk.mLimit;
 import static it.fdg.lm.cProgram3.mMessage;
 import static it.fdg.lm.cProgram3.mMsgDebug;
 import static it.fdg.lm.cProgram3.mPersistAllData;
@@ -31,7 +32,7 @@ import static java.lang.Integer.signum;
 
 public class fMain extends BaseActivity {
 
-    public static ViewGroup fPanelHorizSliders,fPanelVertSliders,fPanelSignals;
+    public static ViewGroup fPanelHorizSliders,fPanelVertSliders,fPanelSignals1;
     public static ViewGroup mySliderPane; //Panel of the sliders
     private static Button cmdCommand1;
 
@@ -39,16 +40,20 @@ public class fMain extends BaseActivity {
     //******************************    MAIN METHODS  ENTRYPOINT
     private void mEntryPoint() {
         //!?mContext = this;
-        fPanelHorizSliders = (ViewGroup) findViewById(R.id.idContainer4HorizontalSliders);
-        fPanelVertSliders = (ViewGroup) findViewById(R.id.idContainer4VerticalSliders);
-        fPanelSignals = (ViewGroup) findViewById(R.id.idContainer4Signals);
+        fPanelHorizSliders = (ViewGroup)    findViewById(R.id.idContainer4HorizontalSliders);
+        fPanelVertSliders = (ViewGroup)     findViewById(R.id.idVerticalSliderPane);
+        mySliderPane = (ViewGroup)          findViewById(R.id.idVerticalSliderPane);        //Container for the sliders
+        mySignal = (cSignalView2)           findViewById(R.id.idSignalView);
+        cmdCommand1 = (Button)              findViewById(R.id.idCommand);
+        fPanelSignals1 = (ViewGroup)        findViewById(R.id.idContainer4Signals1);
         cAndMeth.mInit(this);       //Initialize the general methods
         mInit(this);                //Will only run first time ignoring second calls
         mInitControls();            //Prepare widgets for display
         cUInput.mInit(this);         //  initialise the input module
         cProgram3.mRedraw();
-        cKonst.nTextSize = mGetTextSize();
-        cGraphText.mInit((int) cKonst.nTextSize);         //Enable drawing of texts
+        cKonst.nTextSize = (int) (mGetTextSize() );     //12 points
+        cProgram3.oGraphText = new cGraphText();
+        cProgram3.oGraphText.mInit((int) cKonst.nTextSize);         //Enable drawing of texts
     }
     public  static void mInit(Context mainContext){     //cProgram3
         if (oProtocol!=null)
@@ -58,17 +63,16 @@ public class fMain extends BaseActivity {
         //Prepare the protocols
         mPersistAllData(true);         //onCreate
         cProgram3.nUserLevel(0);        //Remove privileges as default
-        cProgram3.mAppPropsSet(cKonst.eSettings.kRefreshRate,2000);
+        cProgram3.mAppPropsSet(cKonst.eAppProps.kRefreshRate,2000);
     }
     private void mInitControls() {      //Setup widget references for this display
   /*     initiate  views        */
-        cmdCommand1 = (Button) findViewById(R.id.idCommand);
+
 //170920 did not work very well        nTextSize=cmdCommand1.getTextSize();    //170914 use this as a reference for the applciation font size
         cProgram3.oTextTypeface =cmdCommand1.getTypeface();
-        mySignal = (cSignalView2) findViewById(R.id.idSignalView);
+
         mySignal.mInit(1);      //One signal pane
-        mySliderPane = (ViewGroup) findViewById(R.id.idContainer4VerticalSliders);        //Container for the sliders
-//       mCloneView((cSliderView)findViewById(R.id.idVertSliderMaster),7);   //Make add 8 sliders 170914
+//       mCloneView(view ,7);   //Make add 8 sliders 170914
         mSetTouchListeners();
         ArrayList<View> aW = cAndMeth.mAllChildViews(null, (ViewGroup) findViewById(android.R.id.content));
         cSlider.nSliderCount=0;         //Initialize the sliderarray 170915
@@ -79,6 +83,9 @@ public class fMain extends BaseActivity {
             }
         }
         mTouchListening((View) fPanelVertSliders);     //Set the touchhandler
+        mTouchListening((View) fPanelVertSliders.getParent());     //Set the touchhandler
+        mTouchListening((View) mySliderPane.getParent());     //Set the touchhandler
+        mTouchListening((View) fPanelSignals1);     //Set the touchhandler
         mTouchListening((View) mySliderPane);     //Set the touchhandler
         mTouchListening((View) mySignal.getParent());     //Set the touchhandler
         mTouchListening((View) ((View) mySignal.getParent()).getParent());     //Set the touchhandler on topcontainer
@@ -103,13 +110,16 @@ public class fMain extends BaseActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 // ... Respond to touch events
                 boolean bRetVal=false;
-
-                if (view.equals(fPanelVertSliders)){
-                    bRetVal= oGlobalGestureDetector.mListen( (View) view.getParent(), event);
+                if (view.equals(fPanelVertSliders)) {
+                    bRetVal = oGlobalGestureDetector.mListen((View) view, event);
+                    if (oGlobalGestureDetector.bFlingLR())
+                        mShiftWatchPane(signum(oGlobalGestureDetector.nFlingDir[0]));
+                } else if (view.equals(fPanelSignals1.getParent()) ){
+                    bRetVal = oGlobalGestureDetector.mListen((View) view.getParent(), event);
                 } else if (view instanceof HorizontalScrollView) {
                     //Scrollview is child of sliderpane
                     bRetVal= oGlobalGestureDetector.mListen( (View) view.getParent(), event);
-                } else if (view instanceof cSignalView2) {
+                 } else if (view instanceof cSignalView2) {
                     bRetVal= oGlobalGestureDetector.mListen( (View) view, event);
                     if (oGlobalGestureDetector.bLongPress())
                         mRefreshRate(5000);      //Slow down the refresh rate
@@ -122,8 +132,7 @@ public class fMain extends BaseActivity {
                     if (oGlobalGestureDetector.bScaling())
                         mySignal.oElemViewProps().mZoom(oGlobalGestureDetector.nScaleCenterX, oGlobalGestureDetector.nScaleCenterY, oGlobalGestureDetector.nScaleFactor);
 
-                }else
-                if ((view instanceof cSliderView)) {
+                }else if ((view instanceof cSliderView)) {
                     cSliderView V = (cSliderView) view;
                     bRetVal= oGlobalGestureDetector.mListen(view, event);
                     if (oGlobalGestureDetector.bScaling()) {       //Check global gestures first
@@ -137,6 +146,11 @@ public class fMain extends BaseActivity {
                 return bRetVal;
             }
         });
+    }
+
+    private void mShiftWatchPane(int signum) {
+        cProgram3.nWatchPage=mLimit(0,(cProgram3.nWatchPage+signum),1);
+        cProgram3.bDoRedraw=true;
     }
 
     public void cmdCommand1(View v){
@@ -158,7 +172,7 @@ public class fMain extends BaseActivity {
                 cProgram3.oSlider[i].mRefresh(doRedraw);
             }
             if (doRedraw ) {
-                mMatchChildVisibility(fPanelVertSliders);    //Copy visibility from child views
+//                mMatchChildVisibility(fPanelVertSliders);    //Copy visibility from child views
                 mMatchChildVisibility(fPanelHorizSliders);    //Copy visibility from child views
             }
             if (cProgram3.mySignal != null) {
@@ -188,6 +202,7 @@ public class fMain extends BaseActivity {
         setSupportActionBar(toolbar);
         cProgram3.mContext=this;
         mEntryPoint();
+
     }
     @Override
     public void onResume() {

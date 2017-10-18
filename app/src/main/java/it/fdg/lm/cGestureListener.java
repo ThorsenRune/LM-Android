@@ -4,16 +4,15 @@
 package it.fdg.lm;
 
     import android.app.Activity;
-    import android.content.Context;
-    import android.util.Log;
-    import android.view.GestureDetector;
-    import android.view.MotionEvent;
-    import android.view.ScaleGestureDetector;
-    import android.view.View;
+import android.content.Context;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.view.View;
 
-    import static it.fdg.lm.cProgram3.bAdmin;
-    import static it.fdg.lm.cProgram3.mAppProps;
-    import static java.lang.Math.abs;
+import static it.fdg.lm.cProgram3.mAppProps;
+import static java.lang.Math.abs;
 
     public class cGestureListener extends Activity implements GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
         static View myParent;
@@ -24,19 +23,19 @@ package it.fdg.lm;
         public static int[] nFlingDir ={0,0};
         public static float nX,nY;
 
-        public static boolean isScrollingBlocked = cFunk.mInt2Bool(mAppProps(cKonst.eSettings.kBlockScrolling))  ;        //Blocks scrollveiws
+        public static boolean isScrollingBlocked = cFunk.mInt2Bool(mAppProps(cKonst.eAppProps.kBlockScrolling))  ;        //Blocks scrollveiws
         static boolean bLongPress=false;
         static boolean bDoubleTap=false;
         static boolean bFling;
         static boolean bSingleTap=false;
         static boolean bScrolling=false;
-        static int nSignalPaneHeight;
+        static int nSignalPaneHeight=2;
         static boolean bSingleTapConfirmed;
         private final ScaleGestureDetector oScaleDetector;      //
         private final GestureDetector oGestureDetector;
         private boolean bFlingLR;
         private boolean bFlingUD;
-        private boolean bZoomEnable=bAdmin();
+        private boolean bZoomEnable=cProgram3.bZoomEnable();
         private static boolean bScaling;
         private ScaleGestureDetector oScale;
         private boolean bScaleBegin=false;

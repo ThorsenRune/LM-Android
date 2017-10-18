@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
          android:layout_width="match_parent"
         android:background="@drawable/backborder"
-        android:layout_weight="5"
+
         android:layout_height="wrap_content">
         <!-- Vertical slider are havigng ID: WV#            -->
         <it.fdg.lm.cSliderView
@@ -10,6 +10,7 @@
             android:layout_width="10mm"
             android:layout_height="match_parent"
             android:layout_marginRight="5mm"
+            android:layout_marginLeft="3mm"
             android:padding="10pt"
             android:scrollbarSize="1mm"
             android:tag="4" />

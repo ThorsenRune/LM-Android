@@ -228,11 +228,6 @@ public class cSerial5 {
         //Initialize the bluetooth adapter
         if (oBTadapter !=null) return true ;
         oBTadapter = BluetoothAdapter.getDefaultAdapter();
-        //!!!r170307          returns true if connection is opened with success
-        if (oBTadapter == null) {
-            return false;
-        }
-        mSleep(1000);
         return (oBTadapter != null);
     }       //Init the BT device and returns true on succss
 

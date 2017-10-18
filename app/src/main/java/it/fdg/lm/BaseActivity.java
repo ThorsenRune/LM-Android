@@ -9,6 +9,7 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 
 import static it.fdg.lm.cAndMeth.mIsHidden;
+import static it.fdg.lm.cAndMeth.mToggleVisibility;
 import static it.fdg.lm.cFileSystem.readRawTextFile;
 import static it.fdg.lm.cFunk.mInt2Bool;
 import static it.fdg.lm.cGestureListener.nSignalPaneHeight;
@@ -20,7 +21,8 @@ import static it.fdg.lm.cProgram3.nUserLevel;
 import static it.fdg.lm.cProgram3.oFocusdActivity;
 import static it.fdg.lm.cProgram3.oProtocol;
 import static it.fdg.lm.cUInput.mFocusedPanel;
-import static it.fdg.lm.fMain.fPanelSignals;
+import static it.fdg.lm.fMain.fPanelSignals1;
+import static it.fdg.lm.fMain.fPanelVertSliders;
 
 
 public class BaseActivity extends AppCompatActivity {
@@ -54,43 +56,47 @@ public class BaseActivity extends AppCompatActivity {
         if (mnuClick(nId, "Set Value", cUInput.mSelected())) {
             cUInput.mInputValue(true);
         }
+        if (mnuCheck(nId,"Show signal",!mIsHidden(fPanelSignals1))){      //Revision 170921 increase panel size
+            mToggleVisibility(fPanelSignals1);
+            cAndMeth.mLayoutWeightSet(fPanelSignals1,nSignalPaneHeight);
+        }
+        if (mnuCheck(nId,cKonst.eTexts.txtMenuViewLayout ,!mIsHidden(fPanelVertSliders))){
+            mToggleVisibility(fPanelVertSliders);
+           cProgram3.nWatchPage=((cProgram3.nWatchPage+1)%2);
+            cProgram3.bDoRedraw=true;
+        }
         if ((0<nUserLevel())&(mFocusedPanel()!=null)){
-            if (mnuCheck(nId,"Zoom panel",!mIsHidden(cProgram3.mySignal))){
+            if (mnuClick(nId,"Zoom panel")){
                 ViewGroup fa = (ViewGroup) mFocusedPanel();
                 float w = cAndMeth.mLayoutHeightGet(fa);
-                w=(w+2)%5;
+                w=(w+1)%5;
                 cAndMeth.mLayoutWeightSet(fa,w);
             }
-            if (mnuCheck(nId,"Show signal",!mIsHidden(cProgram3.mySignal))){      //Revision 170921 increase panel size
-                nSignalPaneHeight=(nSignalPaneHeight+1)%3;
-                cAndMeth.mLayoutWeightSet(fPanelSignals,nSignalPaneHeight);
-                cProgram3.mySignal.mShow(0<nSignalPaneHeight);
-            }
+
         }
         /* todo
         if (mnuCheck(nId,"Show Vertical Sliders",!mIsHidden(mySignal))){
             cSlider.mShow(mIsHidden(mySignal));
         }
         */
-        if (mnuClick(nId,cKonst.eTexts.txtMenuViewLayout )){
-            cProgram3.nWatchPage=((cProgram3.nWatchPage+1)%2);
-            cProgram3.bDoRedraw=true;
-        }
+
         if (mnuClick(nId,"Mode settings")){
             mBitFields_Show();
         }
-        if (cProgram3.nUserLevel()==cKonst.kUserAdmin) {            //170728    Advanced permissions
+        if (cProgram3.nUserLevel()>0) {            //170728    Advanced permissions
             if (mnuClick(nId, "Control:"+ cUInput.oCtrlID(), cUInput.mSelected())) {
                 cUInput.mInputViewSettings1(true); //Associate element with widget
             }
-            if (mnuCheck(nId, "Design mode", mInt2Bool(cProgram3.mAppProps(cKonst.eSettings.kShowHidden)))) {
-                cProgram3.mAppPropsToggle(cKonst.eSettings.kShowHidden);   cProgram3.bDoRedraw=true;         //Clicked action
+            if (nUserLevel()>1) //Admin only
+            if (mnuCheck(nId, "Design mode", mInt2Bool(cProgram3.mAppProps(cKonst.eAppProps.kShowHidden)))) {
+                cProgram3.mAppPropsToggle(cKonst.eAppProps.kShowHidden);   cProgram3.bDoRedraw=true;         //Clicked action
             }
             if (mnuClick(nId, "Settings")) {
                 mDispSettings();
             }
             BaseActivity.menuFindBTDevice(nId);
-            if (mnuClick(nId,"Listen for client"))          //170926 !- testing only
+            if (nUserLevel()>1) //Admin only    !- testing only
+            if (mnuClick(nId,"Listen for client"))
             {
                 cProgram3.oProtocol[0].oSerial.mStartServerService();
             }

@@ -34,9 +34,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import static android.graphics.Color.*;
+import static android.graphics.Color.RED;
 import static android.graphics.Color.WHITE;
 import static it.fdg.lm.cProgram3.bAdmin;
+import static it.fdg.lm.cProgram3.oGraphText;
 
 public class cSliderView extends View {
     static cSliderView oFocusedSlider;          //Currently focused slider in the collection
@@ -117,6 +118,8 @@ public class cSliderView extends View {
     //To rotate the slider set the rotation
     // number of handles can be set by using the android:tag="#"
     private void mSetHandles() {          //Emulator initialization
+        if (oGraphText==null) oGraphText=new cGraphText(this.getContext());
+        if (isInEditMode()) cGraphText.mInit(20);
         if (this.getTag()!=null) {      //Set number of handles
             String s = this.getTag().toString();
             try {

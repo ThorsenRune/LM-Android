@@ -49,13 +49,14 @@ public class cKonst {
         1.  kBT_ConnectReq1
         2.  isOpen,    doOpen,      kBT_InvalidBT1
 */
-
-    public enum eSettings {     //Application properties enumerator
+    public static int[] nAppProps={0,0,0,0,0,1}; //170904level of permissions given to user
+    public enum eAppProps {     //Application properties enumerator
         kPrivileges,
         kShowHidden,                //Will reveal all controls so they can be edited. ToDo set this flag false when not in editing mode
         kBlockScrolling,
         kAutoConnect,
-        kRefreshRate            //program is running
+        kRefreshRate,            //program is running
+        kZoomEnable
         }
     enum bitmask {
         nil1;
@@ -65,7 +66,7 @@ public class cKonst {
     static int nTextSize=15;
     enum eTexts {     //
         a;
-        public static String txtMenuViewLayout      ="Layout";
+        public static String txtMenuViewLayout      ="Vertical controls";
         public static String txtDevice_DoConnect    ="Switch on device and press here";
         public static String txtDevice_Connecting   ="Connecting ";
         public static String txtDevice_TimeOut      ="Timeout in connection, Retry ";

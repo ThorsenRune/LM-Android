@@ -175,6 +175,7 @@ public class cSignalView2 extends View {
         nSignalPage=mLimit(0,nSignalPage+nPageChange,1);
         cUInput.setFocus(this);
         cProgram3.bDoRedraw=true;
+        mMessage("Panel "+nSignalPage);
     }
 
     public void mShow(boolean b) {

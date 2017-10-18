@@ -1,6 +1,7 @@
 package it.fdg.lm;
 
 import android.app.Application;
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -23,13 +24,23 @@ public class cGraphText extends Application {       //This should handle text gr
     public static int nBackColor;
     private static boolean bRotated;
     private static int nTextSize=30;
-    public cGraphText() {
+    private static cGraphText ob;
+
+    public cGraphText(Context context) {
+        mContext=context;
+    }
+
+    public void getContext() {
         mContext=getApplicationContext();
+    }
+    public cGraphText() {
+        if (mContext==null)        mContext=getApplicationContext();
         mInit(nTextSize);
     }
 
     public static void mInit(int newTextSize) {
-        nBackColor = ContextCompat.getColor(mContext,R.color.colorBackground);
+        if (mContext!=null)
+            nBackColor = ContextCompat.getColor(mContext,R.color.colorBackground);
         nTextSize= newTextSize;
         oTextPaint.setTextSize(nTextSize);
     }

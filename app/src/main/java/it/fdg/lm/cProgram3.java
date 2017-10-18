@@ -28,8 +28,11 @@ import static it.fdg.lm.cFunk.mArrayFind;
 import static it.fdg.lm.cFunk.mArrayRedim;
 import static it.fdg.lm.cFunk.mInt2Bool;
 import static it.fdg.lm.cFunk.mLimit;
-import static it.fdg.lm.cKonst.eSettings.kPrivileges;
-import static it.fdg.lm.cKonst.eSettings.kRefreshRate;
+import static it.fdg.lm.cKonst.eAppProps.kAutoConnect;
+import static it.fdg.lm.cKonst.eAppProps.kPrivileges;
+import static it.fdg.lm.cKonst.eAppProps.kRefreshRate;
+import static it.fdg.lm.cKonst.eAppProps.kZoomEnable;
+import static it.fdg.lm.cKonst.nAppProps;
 import static java.lang.Thread.currentThread;
 
 ;
@@ -40,7 +43,7 @@ public final class cProgram3 {
     public static cSlider[] oSlider=new cSlider[20]  ;               //Slider widget controls 10 vertical and 10 horizontal
     public static cSignalView2 mySignal;        //The current signal view
     //Properties of the application
-    public static int[] nAppProps={0,0,0,0,0}; //170904level of permissions given to user
+
     public static BluetoothDevice[] oPairedDevices;
 
     public static Typeface oTextTypeface;
@@ -50,6 +53,7 @@ public final class cProgram3 {
     public static boolean bDoRefresh=false;
     public static String sMsgLog;          //String containin a all messages
     public static String sErrMsg;
+    public static cGraphText oGraphText;
 
 
     //SGetter for refresh rates
@@ -59,16 +63,16 @@ public final class cProgram3 {
 //            mMessage("New refresh rate " +nRefreshRate);
     }}
     public  static int mRefreshRate(){return nRefreshRate;}
-    public static int mAppProps(cKonst.eSettings kEnum) {
+    public static int mAppProps(cKonst.eAppProps kEnum) {
         int n=kEnum.ordinal();
         if (nAppProps.length<=n)
             nAppProps=mArrayRedim(nAppProps,n);     //Make sure that there is room of index n
         return  nAppProps[n];
     }
-    public static void mAppPropsSet(cKonst.eSettings kEnum, int i) {
+    public static void mAppPropsSet(cKonst.eAppProps kEnum, int i) {
         nAppProps[kEnum.ordinal()]=i;
     }
-    public static void mAppPropsToggle(cKonst.eSettings kEnum) {
+    public static void mAppPropsToggle(cKonst.eAppProps kEnum) {
         nAppProps[kEnum.ordinal()]=(nAppProps[kEnum.ordinal()]+1)%2;
     }
 
@@ -85,7 +89,7 @@ public final class cProgram3 {
 
 
     public static boolean bDesignMode(){
-        return mInt2Bool(mAppProps(cKonst.eSettings.kShowHidden));
+        return mInt2Bool(mAppProps(cKonst.eAppProps.kShowHidden));
     }
     static int[] nPalette={0};
     public static int nWatchPage=0;
@@ -118,6 +122,15 @@ public final class cProgram3 {
     public static boolean bAdmin() {
         return ( nAppProps[kPrivileges.ordinal()]>0);
     }
+    public static boolean bAutoConnect() {
+        return 0<nAppProps[kAutoConnect.ordinal()];
+
+    }
+    public static boolean bZoomEnable() {
+        nAppProps=mArrayRedim(nAppProps,kZoomEnable.ordinal()+5);
+        nAppProps[kZoomEnable.ordinal()]=1;     //!-Temporaryly permanently enabled
+        return ( nAppProps[kZoomEnable.ordinal()]>0);
+    }
     public static int nUserLevel() {
         return ( nAppProps[kPrivileges.ordinal()]);
     }
@@ -142,10 +155,11 @@ public final class cProgram3 {
 
     public static boolean mMainProcess1() {
         nTestCount[0]++;
-        if (bDoRefresh)
+        if (bDoRefresh|bDoRedraw) {
             fMain.mRefresh_DispMain(bDoRedraw);       //Syncrhornize display update with async process
-        bDoRefresh=false;
-        bDoRedraw=false;    //Redrawing done
+            bDoRedraw=false;    //Redrawing done
+            bDoRefresh=false;
+        }
         for (int i=0;i<oProtocol.length;i++){       //For each device
             oProtocol[i].mAsyncProcessing_Call();        //Asynchroneous processing
         }
@@ -175,6 +189,7 @@ public final class cProgram3 {
         sProtDesc= mPrefs5(bGet,"App.Description",sProtDesc);
         sDevices1 = mPrefs5(bGet,"App.Devices", sDevices1);   //Device names (protocol names)  170823
         nAppProps= mPrefs5(bGet,"App.Properties",nAppProps);   //Permissions of the user
+
         sWidgetIds = mPrefs5(bGet,"App.Widgets", mGetListOfControls());   //IDs for widgets used (S# signal W# slider B# biteditor, # index
         //Viewing
        nPalette =mPersistHex(bGet,"App.Palette", nPalette);   //Color palette for controls

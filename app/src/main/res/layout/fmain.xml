@@ -39,36 +39,20 @@
             android:layout_weight="3"
             android:id="@+id/idVerticalSliderPane"
             />
-        <LinearLayout
-            android:id="@+id/idContainer4VerticalSliders"
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:visibility="gone"
-            android:background="@drawable/backborder"
-            >
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/idPaneVerticalSliders1"
-                android:padding="20dp"
-                android:fillViewport="true"
-                >
-            </HorizontalScrollView>
-        </LinearLayout>
         <include layout="@layout/fhorizsliders"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:background="@drawable/backborder"
             />
+
         <include layout="@layout/fsignals"
             android:layout_weight="2"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:orientation="horizontal"
+            android:background="@drawable/backborder"
+            android:id="@+id/idContainer4Signals1"
             />
 
         <LinearLayout

@@ -63,6 +63,14 @@ public class cSlider {
         nCurrentViewPropsIdx = oSliderView.nActiveIdx;
         return oElemViewProps[nCurrentViewPropsIdx];
     }
+    public void mApplySameScale(){      //Apply the same scale to all
+        if (oElemViewProps[oSliderView.nActiveIdx].oGetElem()==null ) return;
+        float[] r = oElemViewProps[oSliderView.nActiveIdx].oGetElem().nDisplayRange;
+        for (int i=0;i<oElemViewProps.length;i++){
+            if (oElemViewProps[i].oGetElem()!=null)
+            oElemViewProps[i].oGetElem().nDisplayRange=r;
+        }
+    }
 
     // get viewsettings objects associated with this control
     private void mInitElements(String[] sElemViewPropsIds) {

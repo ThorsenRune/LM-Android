@@ -1,4 +1,4 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
-    <dimen name="myFontSize">3mm</dimen>
+    <dimen name="myFontSize">12pt</dimen>
 </resources>

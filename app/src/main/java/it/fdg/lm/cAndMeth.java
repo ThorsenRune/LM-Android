@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 import static it.fdg.lm.cFunk.mInt2Bool;
+import static it.fdg.lm.cKonst.nTextSize;
 import static it.fdg.lm.cProgram3.bDesignMode;
 import static it.fdg.lm.cProgram3.mAppProps;
 import static it.fdg.lm.cProgram3.mErrMsg;
@@ -41,6 +42,7 @@ public class cAndMeth extends Activity{
     private static  Context mContext;
     public static Paint oTextPaint= new Paint();                               //General text format
     private static boolean isBlockedScrollView=false;                           //Enable/Block scrollviews
+
     public static void mInit(Context main2) {
         mContext=main2;
     }
@@ -84,6 +86,8 @@ public class cAndMeth extends Activity{
         }
     }
     public static void mSleep(int i) {          //Stop the thread for some time
+        if (!Thread.currentThread().getName().equalsIgnoreCase("mAsyncProcessing_Call"))
+            mMsgDebug("Annother thread");
         try{ Thread.sleep(i);
         }catch( InterruptedException e){
             mMsgDebug("Cant sleep 170929");
@@ -103,7 +107,7 @@ public class cAndMeth extends Activity{
     }
     public static void mSetVisibility(View w,int nTriState) {  //170822
         //0: not there,  1: visible , 2 invisible placeholder
-        if (mInt2Bool(mAppProps(cKonst.eSettings.kShowHidden)))
+        if (mInt2Bool(mAppProps(cKonst.eAppProps.kShowHidden)))
             w.setVisibility(View.VISIBLE);
         else if (nTriState==0)
             w.setVisibility(View.GONE);
@@ -187,15 +191,14 @@ public class cAndMeth extends Activity{
     }
 
     public static ArrayAdapter mMakeSpinnerAdapter(Context ctx, String[] sVarList) {   //Helper for mCombo_SetDataObjSel
-
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(ctx, android.R.layout.simple_spinner_item, sVarList)
         {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {         //The current selection element before dropdown
                 View view =super.getView(position, convertView, parent);
                 TextView textView=(TextView) view.findViewById(android.R.id.text1);
-                textView.setTextSize(cKonst.nTextSize);
-                textView.setTextColor(Color.WHITE);
+                mTextViewSetTextSize(textView);
+                //textView.setTextColor(Color.WHITE);
                 textView.setBackgroundColor(Color.BLACK);
                 return view;
             }
@@ -205,12 +208,17 @@ public class cAndMeth extends Activity{
                 TextView textView=(TextView) view;
                 if (1==((i++) % 2))  textView.setTextColor(Color.YELLOW);
                 else textView.setTextColor(Color.WHITE);
-                textView.setTextSize(cKonst.nTextSize);
+                mTextViewSetTextSize(textView);
                 textView.setBackgroundColor(Color.BLACK);
                 return textView;
             }
         } ;
         return adapter;
+    }
+
+    public static void mTextViewSetTextSize(TextView textView) {
+        if (nTextSize==0) nTextSize= (int) textView.getTextSize();  //Get the textsize in pixels
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, nTextSize);
     }
 
     public static void mDropDownSetSelection(Spinner spnr, String value) {
