@@ -60,9 +60,12 @@ public class BaseActivity extends AppCompatActivity {
             mToggleVisibility(fPanelSignals1);
             cAndMeth.mLayoutWeightSet(fPanelSignals1,nSignalPaneHeight);
         }
-        if (mnuCheck(nId,cKonst.eTexts.txtMenuViewLayout ,!mIsHidden(fPanelVertSliders))){
+        if (mnuCheck(nId,cKonst.eTexts.txtMenu_showVertical,!mIsHidden(fPanelVertSliders))){
             mToggleVisibility(fPanelVertSliders);
-           cProgram3.nWatchPage=((cProgram3.nWatchPage+1)%2);
+            cProgram3.bDoRedraw=true;
+        }
+        if (mnuClick(nId,"Next page ")){
+            cProgram3.nWatchPage=((cProgram3.nWatchPage+1)%2);
             cProgram3.bDoRedraw=true;
         }
         if ((0<nUserLevel())&(mFocusedPanel()!=null)){
@@ -74,11 +77,6 @@ public class BaseActivity extends AppCompatActivity {
             }
 
         }
-        /* todo
-        if (mnuCheck(nId,"Show Vertical Sliders",!mIsHidden(mySignal))){
-            cSlider.mShow(mIsHidden(mySignal));
-        }
-        */
 
         if (mnuClick(nId,"Mode settings")){
             mBitFields_Show();

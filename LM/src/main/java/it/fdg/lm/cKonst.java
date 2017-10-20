@@ -66,7 +66,7 @@ public class cKonst {
     static int nTextSize=15;
     enum eTexts {     //
         a;
-        public static String txtMenuViewLayout      ="Vertical controls";
+        public static String txtMenu_showVertical ="Show Vertical Sliders";
         public static String txtDevice_DoConnect    ="Switch on device and press here";
         public static String txtDevice_Connecting   ="Connecting ";
         public static String txtDevice_TimeOut      ="Timeout in connection, Retry ";

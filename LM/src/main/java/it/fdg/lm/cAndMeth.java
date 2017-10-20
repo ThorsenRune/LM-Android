@@ -216,7 +216,7 @@ public class cAndMeth extends Activity{
         return adapter;
     }
 
-    public static void mTextViewSetTextSize(TextView textView) {
+    public static void mTextViewSetTextSize(TextView textView) {        //Ref171018
         if (nTextSize==0) nTextSize= (int) textView.getTextSize();  //Get the textsize in pixels
         textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, nTextSize);
     }
