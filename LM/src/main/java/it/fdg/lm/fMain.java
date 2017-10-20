@@ -147,7 +147,6 @@ public class fMain extends BaseActivity {
             }
         });
     }
-
     private void mShiftWatchPane(int signum) {
         cProgram3.nWatchPage=mLimit(0,(cProgram3.nWatchPage+signum),1);
         cProgram3.bDoRedraw=true;
