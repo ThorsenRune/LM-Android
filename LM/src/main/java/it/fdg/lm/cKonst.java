@@ -8,6 +8,7 @@ package it.fdg.lm;
 public class cKonst {
     //User levels
     public static int kUserAdmin=2;
+    public static       String sKeyFieldSep=".";
 
     public enum eProtState{                         //States of the protocol        (171012 refactored to here)
         kUnconnected2,                              //No serial connection
@@ -22,7 +23,7 @@ public class cKonst {
         //Error in protocol initialization
         kProtTimeOut,
         kProtError,
-        kRelay;
+        kRelay, kDoConnect1;
     }
     //Serial communication states
     enum eSerial{
@@ -51,11 +52,9 @@ public class cKonst {
 */
     public static int[] nAppProps={0,0,0,0,0,1}; //170904level of permissions given to user
     public enum eAppProps {     //Application properties enumerator
-        kPrivileges,
-        kShowHidden,                //Will reveal all controls so they can be edited. ToDo set this flag false when not in editing mode
+
         kBlockScrolling,
         kAutoConnect,
-        kRefreshRate,            //program is running
         kZoomEnable
         }
     enum bitmask {

@@ -20,13 +20,15 @@ Entry points:
 
 
 
-mProtocolPrepare-> oProtocol[i].mInit
-
  mPersistAllData	(171005A)
  /*   Persistent data for the application. Get/Set current values  to static storage
  *  setsPrefFileName("LM_AppSetting");     //Global settings
  *   sProtFileName=mPrefs5(bGet,"Protocol_Settings_File", sProtFileName);   //Current file for  protocol settings
  * */
+
+Start
+mProcess_Async->mConnect
+
 
 
 
@@ -169,22 +171,7 @@ private void ensureDiscoverable() {
 		}
 
 
-public int mReadByte00(InputStream oI) {        //To refactor into cProtocol 170929 // TODO: 29/09/2017
-		int nAvail=0;
-		try {
-		nAvail = oI.available();
-		} catch (IOException e) {
-		e.printStackTrace();
-		}
-		if (nAvail>0)
-		try {
-		int data= oI.read();      //Remmeber that read is blocking
-		return data;
-		} catch (IOException e) {
-		e.printStackTrace();
-		}
-		return -1;
-		}
+
 public void mFlush() {
 		if (this.oInputStream ==null) return;
 		try {
@@ -196,14 +183,7 @@ public void mFlush() {
 		*/
 
 class tDescriptions {
-private static void mAlignProtocolLengthWithDevicesCount() {
-		if (oProtocol.length<sDevices1.length){
-		mProtocolPrepare(sDevices1.length);
-		}
-		if (oProtocol.length>sDevices1.length){
-		//        sDevices1=mArrayRedim(sDevices1,oProtocol.nDataLength-1);
-		}
-		}
+
 	public static void mToast(Context mContext, String msg){
 		Toast.makeText(cProgram3.mContext, msg, Toast.LENGTH_LONG).show();
 	}

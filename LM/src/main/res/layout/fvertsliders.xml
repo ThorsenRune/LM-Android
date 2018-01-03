@@ -25,6 +25,16 @@
             android:tag="4" />
 
         <it.fdg.lm.cSliderView
+            android:id="@+id/WV2"
+            android:contentDescription="Sliderview"
+            android:layout_width="10mm"
+            android:layout_height="match_parent"
+            android:layout_marginRight="5mm"
+            android:padding="10pt"
+            android:scrollbarSize="1mm"
+         />
+
+        <it.fdg.lm.cSliderView
             android:id="@+id/WV3"
             android:contentDescription="Sliderview"
             android:layout_width="10mm"

@@ -18,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -29,6 +30,7 @@ import static it.fdg.lm.cFunk.mStr2FloatArr;
 import static it.fdg.lm.cFunk.*;
 import static it.fdg.lm.cFunk.mTrim;
 import static it.fdg.lm.cProgram3.mErrMsg;
+import static it.fdg.lm.cProgram3.mMessage;
 import static it.fdg.lm.cProgram3.mMsgDebug;
 
 
@@ -39,9 +41,9 @@ import static it.fdg.lm.cProgram3.mMsgDebug;
 
 public class cFileSystem {
     private static Context mContext;
-    public static String sCurrPrefFileName = "";
     //      CONSTANTS
-    private static String skKeySepStr="=>";
+    private static String kKeySepStr ="=>";
+    private static String kKeyEndLine=";";  //was "\n"
 
     //  Private stuff
 
@@ -53,6 +55,8 @@ public class cFileSystem {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
+
+
     //**************************************        IMPLEMENTATION          ******************
     public static void mInit(Context main2) {
         mContext=main2;
@@ -109,9 +113,14 @@ public class cFileSystem {
             //Check: Did you pass the right context?
         }
     }
-    public static String readRawTextFile( int resId)
+
+
+    //Read text from RAW file with sFileName
+    public static String mFileRead_Raw(String sFileName)
     {
         Context ctx = mContext;
+        int resId = ctx.getResources().getIdentifier(sFileName, "raw", ctx.getApplicationInfo().packageName);
+        if (resId<1) mErrMsg("Cant find resource file:"+sFileName);
         InputStream inputStream = ctx.getResources().openRawResource(resId);
         InputStreamReader inputreader = new InputStreamReader(inputStream);
         BufferedReader buffreader = new BufferedReader(inputreader);
@@ -132,14 +141,51 @@ public class cFileSystem {
 //PREFERENCES           _______________________________/*_________________________________________________________________*/
     //The preferences is a way of storing application data on the persistent system memopry
 //Work function for mPrefs5 is loading/saving in persistent memory
-
-
-    public static void  setsPrefFileName(String sPrefFileName){
-    if (sCurrPrefFileName.equalsIgnoreCase(sPrefFileName+".txt")) return;
-    sCurrPrefFileName=sPrefFileName+".txt";
-    oPreferences = mContext.getSharedPreferences(sCurrPrefFileName, Context.MODE_PRIVATE);
-    prefsEditor = oPreferences.edit();
+    public static String[] mGetPrefFileNames(String StripExt){
+        File prefsdir = new File(mContext.getApplicationInfo().dataDir,"shared_prefs");
+        String[] list = prefsdir.list();
+        String fl="";
+        for (int i = 0; i < list.length; i++) {
+            if (list[i].contains(StripExt)){
+                fl = fl + list[i].replaceAll(StripExt, ";");
+            }
+        }
+        return fl.split(";");
+    }
+    public static String[] mGetDownloadFileNames(String StripExt){
+        verifyStoragePermissions(mContext);
+        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString();
+        File directory = new File(path);
+        String[] list = directory.list();
+        String fl="";
+        for (int i = 0; i < list.length; i++) {
+            if (mTextLike(list[i],StripExt)){
+                fl = fl + list[i].replaceAll(StripExt, ";");
+            }
+        }
+        return fl.split(";");
+    }
+    public static String[] mGetRawFileNames(){          //Extension less list of files in raw directory
+        Field[] fields = R.raw.class.getFields();
+        String[] list=new String[fields.length];
+        for(int i=0; i < fields.length; i++){
+            list[i]=fields[i].getName();
+        }
+        return list;
+    }
+    public static int mPrefFileNameSet(String sPrefFileName){
+        //Set the current preferences file, (load factory settings from raw directory
+        sPrefFileName=sPrefFileName.replace(".xml",""); //Remove extension
+         mMessage("File:"+ sPrefFileName);
+        oPreferences = mContext.getSharedPreferences(sPrefFileName, Context.MODE_PRIVATE);
+        prefsEditor = oPreferences.edit();
+        return oPreferences.getAll().size();
 }
+
+    public static Boolean mPref5HasKey(String sKey){
+        if (oPreferences==null) return false;
+        return oPreferences.contains(sKey);
+    }
     public static String mPrefs5(boolean doGet, String sKey, String strValue ){          //Get set default values the Android way
         /*Context mContext = Program.mContext;//.get();
          see them all by watch :oPreferences.mMap  */
@@ -148,7 +194,7 @@ public class cFileSystem {
     if (oPreferences ==null)
         return "";      //file has not yet been selected, this is an error that should be removed by reordinging program execution
     else if(doGet){
-        s= oPreferences.getString(sKey.trim(), strValue).replace("[", "").replace("]", "").trim();
+        s= oPreferences.getString(sKey, strValue).replace("[", "").replace("]", "").trim();
         return mTrim(s);
     }
     else {
@@ -172,20 +218,27 @@ public class cFileSystem {
         for (String key : keys1) {
             String value = mTrim(keys.get(key).toString()).replace("[","").replace("]","");
             if (sFilter=="")
-                sStr1 = sStr1 + key + "\t"+skKeySepStr+"\t[" + value + "]\n";
+                sStr1 = sStr1 + key + "\t"+ kKeySepStr +"\t[" + value + "]"+kKeyEndLine+"\n";
             else if (key.toLowerCase().contains(sFilter.toLowerCase()))
-                sStr1 = sStr1 + key + "\t"+skKeySepStr+"\t[" + value + "]\n";
+                sStr1 = sStr1 + key + "\t"+ kKeySepStr +"\t[" + value + "]"+kKeyEndLine+"\n";
             else if (key.toLowerCase().contains(sFilter.toLowerCase()))
-                sStr1 = sStr1 + key + "\t"+skKeySepStr+"\t[" + value + "]\n";
+                sStr1 = sStr1 + key + "\t"+ kKeySepStr +"\t[" + value + "]"+kKeyEndLine+"\n";
         }
         return sStr1;
     }       //Make a string with the preferences (selected by Filter)
+    public static String mStr2Pref(String sFile_protCfg, String s1) {
+        cFileSystem.mPrefFileNameSet(sFile_protCfg);
+        return cFileSystem.mStr2Pref(s1);
+    }
     public static String mStr2Pref(String sStr1){
-        String[] separated = sStr1.split("\\r?\\n");           //Split by newlines (There's only really two newlines (UNIX and Windows) that you need to worry about.)
-        String sStrRes="Written \n";
+        sStr1=sStr1.replaceAll("/\\*.*\\*/", ""); //Remove "/* comments */"
+        sStr1=sStr1.replaceAll("//.*?\n","\n") ;    //Remove comments
+//        String[] separated = sStr1.split("\\r?\\n");           //Split by newlines (There's only really two newlines (UNIX and Windows) that you need to worry about.)
+        String[] separated = sStr1.split(kKeyEndLine);           //Split by semicolon
+        String sStrRes="";
         String key="";
         for (int i = 0; i < separated.length; i++) {
-            String s[] = mTrim(separated[i]).split(skKeySepStr);
+            String s[] = mTrim(separated[i]).split(kKeySepStr);
             if (s.length>0) key=_GetKey(s[0]);
             if (s.length==2) {
                 //Remove remarks
@@ -193,8 +246,7 @@ public class cFileSystem {
                 //Remove double backslash end of line
                 String value = mTrim((s[1]));
                 value= mPrefs5(false,key,value);    //Write the value
-                // value=mPrefs5(true,key,value);     //Readback
-                sStrRes = sStrRes + key + "\t"+skKeySepStr+"\t" + value + "\n";
+                 sStrRes = sStrRes + key + "\t"+ kKeySepStr +"\t" + value + kKeyEndLine+"\n";
             }
             else if  ((key.length()>1)&(s.length==1)) {
                 try {
@@ -245,5 +297,10 @@ public class cFileSystem {
     }
 
 
-
+    public static String mRawFile2PrefFile(String sPrefFileName) {
+        String s = mFileRead_Raw(sPrefFileName);
+        mPrefFileNameSet(sPrefFileName);
+        mStr2Pref(s);
+        return s;
+    }
 }

@@ -92,7 +92,7 @@ public class cSignalView2 extends View {
         super.onDraw(canvas);
         // draw the mPath with the mPaint on the canvas when onDraw
 //        canvas.translate(0,canvas.getHeight());   // reset where 0,0 is located
-//        canvas.scale( oGetElem.aData.nDataLength,-1);
+//        canvas.scale( myProtElem1.aData.nDataLength,-1);
 //        canvas.scale(1,-1,nCanvasWidth/2,nCanvasHeight/2);
         //Draw the signal
         canvas.drawPath(mPath, mPaint);
@@ -123,7 +123,7 @@ public class cSignalView2 extends View {
         float nX;
         if (doRedraw) mRedraw();
         if (mIsHidden(this)) return 0;
-        _oElement     = oElemViewProps.oGetElem();
+        _oElement     = oElemViewProps.myProtElem1();
         if (_oElement==null) return 0;            //No signal selected
         //Make the object drawing the signal
         int nLen = _oElement.nDataLength();
@@ -173,7 +173,7 @@ public class cSignalView2 extends View {
 
     public void mShiftPane(int nPageChange) {      //Change pane by changing the ID back or forth
         nSignalPage=mLimit(0,nSignalPage+nPageChange,1);
-        cUInput.setFocus(this);
+        cUInput.mSetFocus(this);
         cProgram3.bDoRedraw=true;
         mMessage("Panel "+nSignalPage);
     }

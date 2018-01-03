@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:id="@+id/idContainer4Signals"
     android:background="@drawable/backborder"
     android:layout_weight="4"
     >

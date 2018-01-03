@@ -36,13 +36,13 @@ import android.widget.TextView;
 
 import static android.graphics.Color.RED;
 import static android.graphics.Color.WHITE;
-import static it.fdg.lm.cProgram3.bAdmin;
 import static it.fdg.lm.cProgram3.oGraphText;
 
 public class cSliderView extends View {
     static cSliderView oFocusedSlider;          //Currently focused slider in the collection
     static cSliderHandle oFocusedHandle;        //Currently focused handle
     public float nScaleMax =100;
+    float nValues[]={10,20,30,40};
     static int margin=2;
     protected iHandleValueChangeListener iHandleValueChangeListener;
     private int kControls=4;        //Maximum controls
@@ -96,9 +96,7 @@ public class cSliderView extends View {
     }
 
     //Get/set values of the handles
-    public float mGetValue(){
-       return oFocusedHandle.getValue(nScaleMax);
-    }
+
 
     public float[] mGetAllValues() {
         float[] a= new float[kControls];
@@ -129,7 +127,7 @@ public class cSliderView extends View {
                 System.out.println("Could not parse " + nfe);
             }
         }
-     mSetHandles(kControls);
+         mSetHandles(kControls);
     }
 
     public void mSetHandles(int nNewNoOfHandles) {      //Initialize and set number of handles
@@ -138,6 +136,10 @@ public class cSliderView extends View {
 		bLimit2Siblings=new boolean[nNewNoOfHandles];//170915 Libit to be within siblings
         bVisible=new boolean[nNewNoOfHandles];		//170913 booleans determining user input capability
         bInitialized = false;      //Will redimension the controls asap
+        for (int i = 0; i< kControls; i++) {
+            if (oHandle[i] == null) oHandle[i] = new cSliderHandle(this);
+        }
+ //       mSetAllValues(nValues);
     }
 
     private void mGetCanvasProportions() {
@@ -181,7 +183,7 @@ public class cSliderView extends View {
     private void mDrawTexts(Canvas canvas) {       //Rewritten 170824 to place text by position parameter
         //  if (oTextPaint == null) return;          //In case this code is called before instancing
         if (sValueText[nActiveIdx] == "") return;       //If no text return
-        if (2*myValue() > canvasWidth)      //Place the value according to handle
+        if (2* oHandle[nActiveIdx].getX() > canvasWidth)      //Place the value according to handle
             cGraphText.mTextDraw(sValueText[nActiveIdx], 7, canvas);
         else
             cGraphText.mTextDraw(sValueText[nActiveIdx], 9, canvas);
@@ -191,8 +193,8 @@ public class cSliderView extends View {
         }
     }
 
-    private int myValue() {
-        int val = oHandle[nActiveIdx].getX();
+    public float nActiveValue() {
+        float val = oHandle[nActiveIdx].getValue(nScaleMax);
         return val;
     }
 
@@ -269,10 +271,8 @@ public class cSliderView extends View {
         int i;
         for (i = 0; i< kControls; i++) {
             //!-    oHandle[i] = new cSliderHandle(getContext(), R.drawable.knob);
-            if (oHandle[i] ==null) oHandle[i] = new cSliderHandle(this);
             oHandle[i].setID(i);
             oHandle[i].mSetArea(oArea);
-            oHandle[i].setValue(nScaleMax,15+i*20);
             oHandle[i].setY(oArea.centerY());
             oHandle[i].setColor(mColorHandle[i]);
         }
@@ -383,7 +383,7 @@ public class cSliderView extends View {
     }
 
     private boolean canFocus(int idx) {     //Returns true if the control can get focus
-        return bEnabled[idx]|bDesignMode|bAdmin();
+        return bEnabled[idx]|bDesignMode;
     }
 
     public void   mSetHandleColor(int nHandleIdx, int nColor) {

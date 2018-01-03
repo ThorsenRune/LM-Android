@@ -5,7 +5,6 @@
         android:orientation="vertical"
         android:layout_weight="3"
         android:background="@drawable/backborder"
-
         android:layout_height="wrap_content">
         <!-- Horizontal slider pane-->
         <!-- Horizontal slider are havign ID: WH#            -->

@@ -185,9 +185,10 @@ public final class cFunk {
     }
 
     public static int mArrayFind(String[] sArray, String sLookFor) {
+        if (sLookFor==null) return -1;
         if (sLookFor=="") return -1;
         for (int i = 0; i < sArray.length; i++) {
-            if (sArray[i].equalsIgnoreCase(sLookFor)) {
+            if (cFunk.mTextLike(sArray[i],sLookFor)) {
                 return i;
             }
         }
@@ -221,5 +222,15 @@ public final class cFunk {
     }
 
 
+    public static boolean mTextLike(String s1, String s2) {
+        if (s1==s2) return true;
+        if (s1==null) return false;
+      return mTrim( s1).equals(mTrim(s2));
+    }
 
+    public static int mAverage(int y0, long x) { //Averaging a value
+        int alfa=500;
+        long y1 = (y0 * alfa + x * (1000 - alfa)) / 1000;
+        return (int) y1;
+    }
 }

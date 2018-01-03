@@ -8,6 +8,8 @@ package it.fdg.lm;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.widget.Toolbar;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,22 +21,27 @@ import java.util.ArrayList;
 
 import static it.fdg.lm.cAndMeth.mMatchChildVisibility;
 import static it.fdg.lm.cAndMeth.mSetVisibility;
+import static it.fdg.lm.cAndMeth.mSleep;
 import static it.fdg.lm.cFunk.mLimit;
+import static it.fdg.lm.cProgram3.bDoRefresh;
+import static it.fdg.lm.cProgram3.mAppSettings;
+import static it.fdg.lm.cProgram3.mCommunicate;
 import static it.fdg.lm.cProgram3.mMessage;
 import static it.fdg.lm.cProgram3.mMsgDebug;
 import static it.fdg.lm.cProgram3.mPersistAllData;
-import static it.fdg.lm.cProgram3.mRefreshRate;
 import static it.fdg.lm.cProgram3.mySignal;
 import static it.fdg.lm.cProgram3.oGlobalGestureDetector;
-import static it.fdg.lm.cProgram3.oProtocol;
+import static it.fdg.lm.cProgram3.oaProtocols;
+import static it.fdg.lm.cProgram3.sFile_ProtCfg;
 import static java.lang.Integer.signum;
 
 
 public class fMain extends BaseActivity {
 
-    public static ViewGroup fPanelHorizSliders,fPanelVertSliders,fPanelSignals1;
+    public static ViewGroup fPanelHorizSliders,fPanelVertSliders,fPanelSignals1,fPanelData;
     public static ViewGroup mySliderPane; //Panel of the sliders
     private static Button cmdCommand1;
+    private static String sMsgCmd="";
 
 
     //******************************    MAIN METHODS  ENTRYPOINT
@@ -45,7 +52,9 @@ public class fMain extends BaseActivity {
         mySliderPane = (ViewGroup)          findViewById(R.id.idVerticalSliderPane);        //Container for the sliders
         mySignal = (cSignalView2)           findViewById(R.id.idSignalView);
         cmdCommand1 = (Button)              findViewById(R.id.idCommand);
+        cmdCommand1.setOnClickListener(v->{cUInput.mCommand(true);});
         fPanelSignals1 = (ViewGroup)        findViewById(R.id.idContainer4Signals1);
+        fPanelData = (ViewGroup)            findViewById(R.id.idContainer4Data1);
         cAndMeth.mInit(this);       //Initialize the general methods
         mInit(this);                //Will only run first time ignoring second calls
         mInitControls();            //Prepare widgets for display
@@ -56,15 +65,17 @@ public class fMain extends BaseActivity {
         cProgram3.oGraphText.mInit((int) cKonst.nTextSize);         //Enable drawing of texts
     }
     public  static void mInit(Context mainContext){     //cProgram3
-        if (oProtocol!=null)
+        if (oaProtocols !=null)
             return;        //Return if its not the first call (second calls could be caused by rotating the device)
         cProgram3.mContext=mainContext;
         cFileSystem.mInit(mainContext);
         //Prepare the protocols
-        mPersistAllData(true);         //onCreate
-        cProgram3.nUserLevel(0);        //Remove privileges as default
-        cProgram3.mAppPropsSet(cKonst.eAppProps.kRefreshRate,2000);
+        mAppSettings(true);
+        mPersistAllData(true,sFile_ProtCfg);         //onCreate
+
     }
+
+
     private void mInitControls() {      //Setup widget references for this display
   /*     initiate  views        */
 
@@ -82,6 +93,9 @@ public class fMain extends BaseActivity {
                 mTouchListening( aW.get(i));     //Set the touchhandler
             }
         }
+        mAddControl("WD1",R.id.idWD1);          //Set Data views
+        mAddControl("WD2",R.id.idWD2);
+        mAddControl("WD3",R.id.idWD3);
         mTouchListening((View) fPanelVertSliders);     //Set the touchhandler
         mTouchListening((View) fPanelVertSliders.getParent());     //Set the touchhandler
         mTouchListening((View) mySliderPane.getParent());     //Set the touchhandler
@@ -90,6 +104,13 @@ public class fMain extends BaseActivity {
         mTouchListening((View) mySignal.getParent());     //Set the touchhandler
         mTouchListening((View) ((View) mySignal.getParent()).getParent());     //Set the touchhandler on topcontainer
     }       //Initialize controls on this view
+
+    private void mAddControl(String sID, int idWD) {   //171130    Add a control to the control array
+        cData_View v = (cData_View) findViewById(idWD);
+        v.mInit(this,sID    );
+        cProgram3.oControls_Add(v,sID);
+        mTouchListening(v);
+    }
 
     private void mSetTouchListeners() {
         oGlobalGestureDetector =new cGestureListener(this);   //170915
@@ -122,10 +143,10 @@ public class fMain extends BaseActivity {
                  } else if (view instanceof cSignalView2) {
                     bRetVal= oGlobalGestureDetector.mListen( (View) view, event);
                     if (oGlobalGestureDetector.bLongPress())
-                        mRefreshRate(5000);      //Slow down the refresh rate
+                        //nRefreshRate(5000);      //Slow down the refresh rate
                     if (oGlobalGestureDetector.bSingleTap()) {
                         ((cSignalView2)view).mShowCoord(oGlobalGestureDetector.nX, oGlobalGestureDetector.nY);
-                        mRefreshRate(100);       //Speed up refresh rates
+
                     }
                     if (oGlobalGestureDetector.bFlingLR())
                         mySignal.mShiftPane(signum(oGlobalGestureDetector.nFlingDir[0]));  //Change the pane in direction -1,1
@@ -157,7 +178,6 @@ public class fMain extends BaseActivity {
     }
 
     public static void mRefresh_DispMain(boolean doRedraw) {       //Refresh controls on display
-
         if (doRedraw){
             cProgram3.mySignal.mInit(1);
         }
@@ -166,6 +186,8 @@ public class fMain extends BaseActivity {
         } else if (cProgram3.oFocusdActivity instanceof cBitField) {
             ((cBitField) cProgram3.oFocusdActivity).mRefresh(doRedraw);
         } else {
+
+            cProgram3.mControlsRefresh(doRedraw);
             cUInput.mRefresh(doRedraw);
             for (int i = 0; i < cSlider.nSliderCount; i++) {
                 cProgram3.oSlider[i].mRefresh(doRedraw);
@@ -181,15 +203,20 @@ public class fMain extends BaseActivity {
         }
     }
 
-    public static void cmdText(String msg) {
-        if (cmdCommand1==null) return;          //Only when visible
-        if (msg=="")
-            mSetVisibility(cmdCommand1,0);
-        else {
-            mSetVisibility(cmdCommand1, 1);
-            cmdCommand1.setText(msg);
-        }
+    public static void mCommandSet( String sMsgCmd) {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            public void run() {
+                if (sMsgCmd == "")
+                    mSetVisibility(cmdCommand1, 0);
+                else {
+                    mSetVisibility(cmdCommand1, 1);
+                    cmdCommand1.setText(sMsgCmd);
+                }
+            }
+        });
     }
+
 
     //  *************************                    SYSTEM STUFF       *************************
     @Override
@@ -201,14 +228,14 @@ public class fMain extends BaseActivity {
         setSupportActionBar(toolbar);
         cProgram3.mContext=this;
         mEntryPoint();
-
+        cmdText("Command/information button");
     }
     @Override
     public void onResume() {
         super.onResume();
         cProgram3.bDoRedraw=true;             //Update the screen
-        cProgram3.mCommunicate(true);
         cProgram3.oFocusdActivity=this;
+        mCommunicate(true);
     }
     @Override
     protected void onDestroy() {            //Last event before program is killed, but also called sometimes when another activity is ending?
@@ -218,22 +245,30 @@ public class fMain extends BaseActivity {
 
     @Override
     public void onBackPressed() {       //Some black magic asking user how to quit, saving/not saving data
-        cProgram3.mEndProgram();
         mMessage("Ending program");
+        if (isFinishing())        cProgram3.mEndProgram();
+        mSleep(2000);
         finish();
         super.onBackPressed();
+        finishAffinity();
 
     }
 
     @Override
 
     protected void onPause() {
-        cProgram3.mCommunicate(false);      //Slowdown the refresh rate
         super.onPause();
+        if (isFinishing()) cProgram3.mMsgLog("isFinishing onPause");
+
     }
 
     public int mGetTextSize() {
         return getResources().getDimensionPixelSize(R.dimen.myFontSize);
 
+    }
+
+    public static void cmdText(String s) {      //Set text for command button
+        mCommandSet(s);
+        bDoRefresh=true;
     }
 }

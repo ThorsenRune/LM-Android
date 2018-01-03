@@ -25,8 +25,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentTop="true"
-                    android:onClick="cmdCommand"
-                    android:text="Settings Sync"
+                    android:text="idbutton31"
                     android:textAllCaps="false" />
 
                 <EditText
@@ -40,6 +39,13 @@
                     android:hint="Filterstring"
                     android:visibility="visible"
                     android:layout_alignBottom="@+id/idbutton31" />
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@id/idFilterText"
+                    android:text="Current File"
+                    android:id="@+id/idMsg"
+                    />
             </RelativeLayout>
 
             <ScrollView

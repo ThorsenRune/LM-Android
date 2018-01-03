@@ -26,7 +26,7 @@ public class cData_View extends LinearLayout {
     //******************    PRIVATE
     private SeekBar editSlider;
     private Button lblElementName;
-    public Context oParent;
+    public Context mContext;
     private TextView editValue;
     //Not used , reserved for future use
     private String myId1="D";
@@ -50,7 +50,7 @@ public class cData_View extends LinearLayout {
 
     private void init(AttributeSet attrs, int defStyle) {
         // Load attributes
-        oParent=getContext();
+        mContext =getContext();
         inflate(getContext(), R.layout.data_view, this);
         editSlider =(SeekBar)this.findViewById(R.id.idseekBar);
         editValue= (TextView) findViewById(R.id.ideditValue1);
@@ -68,13 +68,13 @@ public class cData_View extends LinearLayout {
     }
 
     private void mEditValue() {
-        cUInput.setFocus(oElemViewProps);
+        cUInput.mSetFocus(oElemViewProps);
         cUInput.mInputValue(true);
     }
 
     private void mSelectElement() {
-        cUInput.setFocus(oElemViewProps);
-//        cUInput.mSelProtElem(true);
+        cUInput.mSetFocus(oElemViewProps);
+        cUInput.mInputViewSettings1(true);
     }
 
     private void mInputHandler(final EditText editValue) {
@@ -105,14 +105,18 @@ public class cData_View extends LinearLayout {
         if (editValue==null) return;
         String s = mInt2str(oElemViewProps.mRawValue());
         editValue.setText(s);
+        editValue.invalidate();
     }       //Refresh the control (or full redraw)
 
     private void mRedraw() {
-        lblElementName.setText(oElemViewProps.mGetName());
+        oElemViewProps.mUpdate(this);
+        if (oElemViewProps.bVisible()) {
+            lblElementName.setText(oElemViewProps.mGetName());
+        }
     }           //Draw whats not refreshed
 
     public void mInit(Context oOwner, String sId) {
-        oParent=oOwner;
+        mContext =oOwner;
 
     }
 

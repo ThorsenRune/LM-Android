@@ -1,4 +1,4 @@
-//170825
+//171222
 /// //folder: https://drive.google.com/drive/u/0/folders/0B5pCUAt6BabuU1I1Ri1zNzA4SG8
 //Doc: https://docs.google.com/document/d/1F2RN7d3CpUOBJBWO0P_yZ6IOQa-Yb-6Kb_5WM3j-_20/edit
 
@@ -27,10 +27,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import static it.fdg.lm.cFunk.mInt2Bool;
 import static it.fdg.lm.cKonst.nTextSize;
 import static it.fdg.lm.cProgram3.bDesignMode;
-import static it.fdg.lm.cProgram3.mAppProps;
 import static it.fdg.lm.cProgram3.mErrMsg;
 import static it.fdg.lm.cProgram3.mMsgDebug;
 
@@ -86,12 +84,12 @@ public class cAndMeth extends Activity{
         }
     }
     public static void mSleep(int i) {          //Stop the thread for some time
-        if (!Thread.currentThread().getName().equalsIgnoreCase("mAsyncProcessing_Call"))
-            mMsgDebug("Annother thread");
         try{ Thread.sleep(i);
         }catch( InterruptedException e){
-            mMsgDebug("Cant sleep 170929");
+            mMsgDebug("Cant sleep 170929" +Thread.currentThread().getName());
         }
+        if (i>99)
+            mMsgDebug("Long sleep");
     }
 
     //      Android controls
@@ -107,7 +105,7 @@ public class cAndMeth extends Activity{
     }
     public static void mSetVisibility(View w,int nTriState) {  //170822
         //0: not there,  1: visible , 2 invisible placeholder
-        if (mInt2Bool(mAppProps(cKonst.eAppProps.kShowHidden)))
+        if (bDesignMode())
             w.setVisibility(View.VISIBLE);
         else if (nTriState==0)
             w.setVisibility(View.GONE);
@@ -226,7 +224,7 @@ public class cAndMeth extends Activity{
         for (int position = 0; position < adapter.getCount(); position++) {
             String s=adapter.getItem(position);
             if (s==null) return;
-            boolean found=s.equalsIgnoreCase(value);
+            boolean found=cFunk.mTextLike(s,value);
             if(found) {
                 spnr.setSelection(position);
                 return;

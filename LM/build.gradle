@@ -10,7 +10,7 @@ android {
         }
     }
     compileSdkVersion 25
-    buildToolsVersion "26.0.0"
+
     defaultConfig {
         applicationId "it.fdg.lm"
         minSdkVersion 23
@@ -31,6 +31,10 @@ android {
             minifyEnabled false
             zipAlignEnabled true
         }
+    }
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
     }
 }
 

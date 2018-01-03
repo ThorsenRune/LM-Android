@@ -2,6 +2,7 @@
 package it.fdg.lm;
 
 
+import static it.fdg.lm.cProgram3.mErrMsg;
 
 public class cFIFO {		                    //
     public static final int kFIFOSize=10000;	//Maximal buffer nDataLength in bytes
@@ -61,8 +62,24 @@ public class cFIFO {		                    //
             }
             return ((int)b  & 0xFF);    //Typecasting to an unsigned byte in integer format
         }
-      // GUIAnd.message1("Another fatal error !!!");
+        mErrMsg ("FIFO Underrun");
         return -1;
+    }
+
+    public int mPeek(int nOffset){   //Peek at offset without popping
+        if (nOffset>nBytesAvail) return -1;     //Past end of buffer
+        int idx = nSTARTpointer + nOffset;
+        if (idx>=nFIFOSize) idx=idx-nFIFOSize;
+        return (aFIFO[idx] & 0xFF);
+    }
+    public int[] mFIFOShow(){   //Show the buffer for debug purpo
+        int[] aData=new int[nBytesAvail];
+        for (int i=0;i<nBytesAvail;i++){
+            int idx = nSTARTpointer + i;
+            if (idx>=nFIFOSize) idx=idx-nFIFOSize;
+            aData[i]=aFIFO[idx];
+        }
+        return aData;
     }
 }
 //mFIFOpop

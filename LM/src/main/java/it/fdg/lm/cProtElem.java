@@ -7,22 +7,20 @@ package it.fdg.lm;
 *       Element of data of the protocol
 */
 
+import static it.fdg.lm.cFileSystem.mPrefs5;
 import static it.fdg.lm.cFunk.mArrayRedim;
+import static it.fdg.lm.cKonst.sKeyFieldSep;
 import static it.fdg.lm.cProgram3.mErrMsg;
 import static it.fdg.lm.cProgram3.mPalIdx2Col;
-import static it.fdg.lm.cProgram3.nCurrentProtocol;
-import static it.fdg.lm.cProgram3.oProtocol;
-import static it.fdg.lm.cFileSystem.mPrefs5;
-import static java.lang.Math.cos;
 
 public class cProtElem {
-    cProtocol3 myParent=oProtocol[nCurrentProtocol];         //The parent of this protocol element
+    private cProtocol3 oProtocol;         //The parent of this protocol element
     String sVarName="";
+    private String[] sLinkVarName;   //={"ProtNr","Varname","Index"};//171129
     int nVarNameLen=-1;
-    int nVarId=-1;
+    int myVarId =-1;
     int nVarType=-1;
-    private int nDataArraySize;          //+161216
-    private int[] aData;                     //Holding data from device
+    private int[] aData={-1};               //Holding data from device
     private byte nGetReqCntr=0;            //8 bit signed counter for the number of times we read  a oProtData
     private int nSetReqCntr=0;            //8 bit signed counter for the number of times we write a oProtData
     int nDataTimeStamp=0;
@@ -40,10 +38,8 @@ public class cProtElem {
     private static String sMyKey="";
     int [][] nColors=new int[2][4];  //Colors are kColorDim X  dataarraysize matrix
     private int[] nBitVisible=new int[32];
-    private int kColorDim=2;        //170904        number of colors for each element
-    public int nProtIndex;
-    public int nIndexInContainer=0;
-
+    private int myIndex=0;
+    private cProtElem oLinkDest;    //Relay data to anoter ProtElement
     public int mBackColor(int myProtDataIdx) {
         return mPalIdx2Col(mColorIndex(myProtDataIdx, 1));
     }
@@ -53,7 +49,7 @@ public class cProtElem {
     }
 
     public void mDeviceReadRequest() {      //Queues a request to read from device, use this to refresh data
-        if (nSetReqCntr<1)
+        if (nSetReqCntr<1)          //Only read if youre not writing
             nGetReqCntr=1;                   //Request a update of the element from device if not writing
     }
 
@@ -61,60 +57,70 @@ public class cProtElem {
 
 
     public cProtElem(cProtocol3 parentProtocol) {
-        myParent=parentProtocol;
+        oProtocol =parentProtocol;
         mInit2();
     }
 
     public void mInit2() {            //Initialize protocol element
         nDataLength(1);
     }
-
-    public void mSettings(boolean bGet){        //mFileSave the
+    public void mSettings(boolean bGet) {        //mFileSave the
         if (sVarName.length()<1){
             mErrMsg("No value for element");
             return;
         }
-            sMyKey="E."+sVarName;
-            sUnit= mPrefs5(bGet,sMyKey+".Unit",sUnit);
-            nOffset= mPrefs5(bGet,sMyKey+".Offset",nOffset);
-            nFactor = mPrefs5(bGet,sMyKey+".Factor", nFactor);
-            nDisplayRange = mPrefs5(bGet, sMyKey + ".DispRange", nDisplayRange);
-            sDescr= mPrefs5(bGet,sMyKey+".Descr",sDescr);
-            sAlias= mPrefs5(bGet,sMyKey+".Alias",sAlias);
-            nColors[0] = mPrefs5(bGet,sMyKey+".Color1", nColors[0]);    //Fore back color indexes
-            nColors[1] = mPrefs5(bGet,sMyKey+".Color2", nColors[1]);    //Fore back color indexes
-            nProperties = mPrefs5(bGet,sMyKey+".Properties",nProperties);
-
-            if (mIsBitField()||(bGet)) {        //Do only save real bitfields
-                sBitNames = mPrefs5(bGet, sMyKey + ".BitNames", sBitNames);
-                nBitVisible = mPrefs5(bGet, sMyKey + ".BitDisp", nBitVisible);
-            }
-           // if (aData.nDataLength<10)
-                aData= mPrefs5(bGet,sMyKey+".Data",aData);
-/*!-170822            cProgram3.bDoRedraw=true;
-            if (nWriteDeviceOnStart())
-                nSetReqCntr=0;  //!Todo change this to a positive value when youre ready to load settings on mStartListening
-                */
+        sMyKey = sProtName()+sKeyFieldSep + sVarName;
+        mSettings1(bGet,sMyKey);
     }
 
+    private String myDevName() {
+        return  oProtocol.mDeviceNameGet();
+    }
+
+    public void mSettings1(boolean bGet,String sMyKey){        //mFileSave the
+        sUnit= mPrefs5(bGet,sMyKey+".Unit",sUnit);
+        nOffset= mPrefs5(bGet,sMyKey+".Offset",nOffset);
+        nFactor = mPrefs5(bGet,sMyKey+".Factor", nFactor);
+        nDisplayRange = mPrefs5(bGet, sMyKey + ".DispRange", nDisplayRange);
+        sDescr= mPrefs5(bGet,sMyKey+".Descr",sDescr);
+        sAlias= mPrefs5(bGet,sMyKey+".Alias",sAlias);
+        nColors[0] = mPrefs5(bGet,sMyKey+".Color1", nColors[0]);    //Fore back color indexes
+        nColors[1] = mPrefs5(bGet,sMyKey+".Color2", nColors[1]);    //Fore back color indexes
+        nProperties = mPrefs5(bGet,sMyKey+".Properties",nProperties);
+        sLinkVarName = mPrefs5(bGet,sMyKey+".RelayTo",sLinkVarName );   //R171130
+        aData= mPrefs5(bGet,sMyKey+".Data",aData);
+        if (mIsBitField()||(bGet)) {        //Do only save real bitfields
+            sBitNames = mPrefs5(bGet, sMyKey + ".BitNames", sBitNames);
+            nBitVisible = mPrefs5(bGet, sMyKey + ".BitDisp", nBitVisible);
+        }
+    }
+    public void  mLinkRefresh() {       //Is this variable linked to another?
+        if (sLinkVarName==null)
+            oLinkDest=null;
+        else if (sLinkVarName.length>1) {       //Initialize pointer
+            oLinkDest = cProgram3.mElementByName(sLinkVarName[0], sLinkVarName[1]);
+        }
+    }
     public float getVal(int idx) {      //Return value as transformed raw data as units e.g. mA,mV etc
-        mDeviceReadRequest();   // 170919       nGetReqCntr=1;                   //Request a update of the element from device
         if (idx<aData.length)
-             return (float)(aData[idx]-nOffset)/ nFactor;            //Convert integer to units
+             return (float)(mDataRead(idx)-nOffset)/ nFactor;            //Convert integer to units
         //Catch errors
-        mErrMsg("Index fault");
+        mErrMsg("Index fault in "+ sProtName()+":"+sVarName);
+        nDataLength(idx);
         return 0;
     }
 
     public void setVal(int idx, float val) {        //Set a value in the relative units
         if (aData.length<=idx) mErrMsg("Index fault");
           //Clip value to display range
-        if (val<nDisplayRange[0]){
-            val=nDisplayRange[0];
-            mErrMsg("Clipping value to "+val);
-        }else         if (val>nDisplayRange[1]){
-            val=nDisplayRange[1];
-            mErrMsg("Clipping value to "+val);
+        if (nDisplayRange[0]<nDisplayRange[1]) {     //Range control enabled
+            if (val < nDisplayRange[0]) {
+                val = nDisplayRange[0];
+                mErrMsg("Clipping value to " + val);
+            } else if (val > nDisplayRange[1]) {
+                val = nDisplayRange[1];
+                mErrMsg("Clipping value to " + val);
+            }
         }
         mDataWrite(idx,(int) (val* nFactor+0.5)+nOffset);
 //        aData[idx]=(int) (val* nFactor+0.5)+nOffset;    //Convert units to integer, rounding to nearest integer
@@ -123,23 +129,25 @@ public class cProtElem {
     //****************************EXCHANGE DATA WITH DEVICE *****************************
     public int mDataRead(int idx){      //Read data from device
         if (aData.length<=idx) mErrMsg("Index fault");
-        if (nSetReqCntr<1)          //Only read if youre not writing
-            nGetReqCntr=2;
+        mDeviceReadRequest();
+        if (oLinkDest!=null)            //If this variable is linked to another
+        {   //            mRelayTo(oLinkDest, aData[idx])
+            oLinkDest.mDataWrite(idx,aData[idx]);
+        }
         return aData[idx];
     }
-    public int mDataPeek(int idx){
-        if (aData.length<=idx) mErrMsg("Index fault");
-        return aData[idx];
-    }
-    public void mDataSet(int idx, int value) {      //Does not alter request state
+    public void mData(int idx, int value) {      //Does not alter request state, just change the curren
         if (0<nSetReqCntr)      //Don't change values while writing to device
             return;
-        aData[idx]=value;
+        if (idx<aData.length)
+            aData[idx]=value;
+        else
+            mErrMsg("Index out of bounds");
     }
     public void mDataWrite(int idx, int value) {
         aData[idx]=value;
         nGetReqCntr=-2;     //Stop reading to be sure a write has been done
-        nSetReqCntr=2;
+        nSetReqCntr=5;
     }
 
     //*******************************************************************************
@@ -161,11 +169,13 @@ public class cProtElem {
 //        return nDataArraySize;
     }
     public void nDataLength(int nNewLength){
-        aData=new int[nNewLength];
-        nDataArraySize=aData.length;          //+161216   nDataLength of the datastructure
+        if (nDataLength()!=nNewLength)
+            aData=new int[nNewLength];
     }
 
     public String mGetValueText(int indexOfDataArray) {
+        if (myVarId<0)
+            return sVarName;
         if (mIsInt())       //Format as integer
             return  getVal(indexOfDataArray)+" "+getUnits();
         return String.format("%.1f ", getVal(indexOfDataArray))+getUnits();
@@ -175,25 +185,6 @@ public class cProtElem {
         return sVarName;
     }
 
-    //******************************SIMULATIONS********************************
-    public static void mSimulateEmg(cProtElem d) {
-        int l = 120;
-        d.nDataLength(l);
-        for (int i = 0; i < d.nDataLength(); i++) {
-            d.aData[i] = (int) (50 * (2 + cos(((double) i) * (20 * 3.1415926 / 180))));
-        }
-    }
-    public static void   mProtInitSimulation(cProtocol3 oProtocol) {
-        int nVarCount=10;
-        oProtocol.mSetProtSize(nVarCount);
-        for(int i=0;i<nVarCount;i++){
-
-            //oaProtData[i].sVarName="Var#"+i;
-            //oaProtData[i].setScaling(i+10,(i+5)*10,"mA");//nOffset,nFactor,sUnits
-        }
-        //mSimulateEmg(oaProtData[1]);
-
-    }
 
 
     private boolean mIsBitField() {
@@ -272,15 +263,22 @@ public class cProtElem {
         return nFactor==1;
     }
 
-
-
-
     public void mCopyElement(cProtElem oNewElement) {       //Clone the new element
         sVarName=oNewElement.sVarName;
-        nVarId=oNewElement.nVarId;
-        aData=oNewElement.aData;
+        nVarId(oNewElement.nVarId());
+
         nDataLength(oNewElement.nDataLength());       //Redundant with setting data
         nVarType =oNewElement.nVarType;
+    }
+
+    public void nVarId(int nId) {
+        if ((nId<64)||(nId>100))
+            mErrMsg("Var id out of range");
+        myVarId=nId;
+    }
+
+    public int nVarId() {
+        return myVarId;
     }
 
 
@@ -299,5 +297,19 @@ public class cProtElem {
 
     public boolean mHasGetRequest() {
         return 0<nGetReqCntr;
+    }
+
+    public int nProtIndexGet() {
+        return oProtocol.nIndex();
+    }
+
+
+    public String sProtName() {
+        if (oProtocol ==null) return "";
+        return oProtocol.sProtName();
+    }
+
+    public cProtocol3 myProtocol() {
+        return oProtocol;
     }
 }

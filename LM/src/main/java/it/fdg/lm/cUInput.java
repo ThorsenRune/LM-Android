@@ -1,8 +1,7 @@
 //              USER INPUT using the build in Dialog
-
 //170915        Added method of getting focused control
-//folder: https://drive.google.com/drive/u/0/folders/0B5pCUAt6BabuU1I1Ri1zNzA4SG8
 //Doc:  https://docs.google.com/document/d/1iuD2xAL0aTZgCWTZS4Z6E5y8QVqJ1_82keiaz6wcHO0/edit
+//folder: https://drive.google.com/drive/u/0/folders/0B5pCUAt6BabuU1I1Ri1zNzA4SG8
 package it.fdg.lm;
 
 import android.app.AlertDialog;
@@ -33,16 +32,19 @@ import android.widget.TextView;
 import static it.fdg.lm.cAndMeth.mMakeSpinnerAdapter;
 import static it.fdg.lm.cAndMeth.mTextViewSetTextSize;
 import static it.fdg.lm.cDebug.nTestCount;
+import static it.fdg.lm.cFileSystem.mFileRead;
+import static it.fdg.lm.cFileSystem.mGetDownloadFileNames;
+import static it.fdg.lm.cFileSystem.mGetPrefFileNames;
+import static it.fdg.lm.cFileSystem.mGetRawFileNames;
+import static it.fdg.lm.cFileSystem.mPref2Str;
 import static it.fdg.lm.cFunk.mArrayFind;
 import static it.fdg.lm.cFunk.mIndexStringArry;
-import static it.fdg.lm.cFunk.mLimit;
 import static it.fdg.lm.cFunk.mStr2Float;
 import static it.fdg.lm.cFunk.mStr2Int;
-import static it.fdg.lm.cFunk.mStr2StrArr;
-import static it.fdg.lm.cFunk.mStrArr2Str;
+import static it.fdg.lm.cKonst.eProtState.kDoConnect1;
 import static it.fdg.lm.cKonst.eProtState.kProtInitDone;
 import static it.fdg.lm.cKonst.eProtState.kProtInitInProgress;
-import static it.fdg.lm.cKonst.eProtState.kProtResetReq1;
+import static it.fdg.lm.cKonst.eProtState.kProtReady;
 import static it.fdg.lm.cKonst.eProtState.kProtUndef1;
 import static it.fdg.lm.cKonst.eSerial.kBT_BrokenConnection;
 import static it.fdg.lm.cKonst.eSerial.kBT_ConnectReq1;
@@ -51,17 +53,19 @@ import static it.fdg.lm.cKonst.eSerial.kBT_DevicePickerActive;
 import static it.fdg.lm.cKonst.eSerial.kBT_InvalidDevice1;
 import static it.fdg.lm.cKonst.eSerial.kBT_TimeOut;
 import static it.fdg.lm.cKonst.eSerial.kDeviceWasSelected;
-import static it.fdg.lm.cKonst.nAppProps;
 import static it.fdg.lm.cProgram3.bAutoConnect;
 import static it.fdg.lm.cProgram3.bDoRedraw;
+import static it.fdg.lm.cProgram3.mCommunicate;
 import static it.fdg.lm.cProgram3.mErrMsg;
+import static it.fdg.lm.cProgram3.mMsgStatus;
 import static it.fdg.lm.cProgram3.mPersistAllData;
-import static it.fdg.lm.cProgram3.nCurrentProtocol;
+import static it.fdg.lm.cProgram3.mPrivileges;
+import static it.fdg.lm.cProgram3.nRefreshRate;
 import static it.fdg.lm.cProgram3.oFocusdActivity;
-import static it.fdg.lm.cProgram3.oProtocol;
-import static it.fdg.lm.cProgram3.sDevices1;
-import static it.fdg.lm.cProgram3.sErrMsg;
-import static it.fdg.lm.fMain.cmdText;
+import static it.fdg.lm.cProgram3.oaProtocols;
+import static it.fdg.lm.cProgram3.sDevices2;
+import static it.fdg.lm.cProgram3.sFile_ProtCfg;
+
 
 
 /**
@@ -78,8 +82,15 @@ public class cUInput {
     private static AlertDialog.Builder alert;
     private static AlertDialog mAlertDialog;
     private static eEditType oEditType;
-        //      Controls for the alert myLayout
+    public static View oFocusedView;
+    //      Controls for the alert myLayout
     static  Spinner[] inCB =new Spinner[6];
+    static  Spinner cbProtNr;
+    static  Spinner cbElemNr;
+    static  Spinner cbElemIndex;
+    static  Spinner cbSettingsFile;
+
+    static  EditText txtRefresh;
     static TextView[] lblLbl =new TextView[6];
     static View[] inpView =new View[6];
 
@@ -93,11 +104,18 @@ public class cUInput {
             "Visible",   //
             "Placeholder" };
     private static int nEditIdx;
-    private static boolean isDirty;
+    private static boolean isDirty;                 //Data has been edited and persistalldata should be called
     private static boolean bHideKeyboard=true;      //Hide softkeyboard on opening a dialog, waiting for user to click
     private static boolean bReturnKeyPressed;
-    public static View oFocusedView;
-    private static int nButtonPressCount;
+    private static int myProtIdx=0;
+    private static String sCmdTxt="";
+
+    private static boolean bAccepted;
+    private static cOptionBox oOptionBox;       //Location for loading files in mSettingsFile_Select
+    private static int nSettingsDestIdx;
+
+    private static String sDialogTitle="";
+
     //private static cBitField oBitField;         //When editing cBitField
 
     public static boolean mSelected() {         //Returns true if an element is selected
@@ -108,11 +126,18 @@ public class cUInput {
         // id of focused control
         if (oElemViewProps==null) return "";
         String s = oElemViewProps.myId1;
-        if (mGetElemObj()!=null)
-            s=s+" - " +oElemViewProps.oGetElem().sElemName();
+        if (mElement()!=null)
+            s=s+" - " +oElemViewProps.myProtElem1().sElemName();
         return  s;
     }
-
+    static String mGetCtrlDescr(){      //171213
+        String s = "";
+        if (oElemViewProps==null) return s;
+        s=oElemViewProps.myId1;
+        if (mElement()!=null)
+            s=s+" - " +oElemViewProps.myProtElem1().sElemName();
+        return s;
+    }
     public static String sValue() {
         return (""+oElemViewProps.mGetValue());
     }
@@ -125,32 +150,91 @@ public class cUInput {
         if (bAsk) {
             oEditType = eEditType.kInputSelectDevice;
             mLinLayPrep2();
-            mLayoutAddDropDown1(1,"Device",sDevices1,nCurrentProtocol);
-//            mLayoutAddCheckbox(2, "Relay", nCurrentProtocol==nRelayProtocol);
-            mLayoutAddCmd(2,"Other devices").setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {       //R170627
-                    oProtocol[nCurrentProtocol].mBT_PickDevice1();
-                    mAlertDialog.dismiss();
-                }
-            });
-            mDialogSetup2("Select device", oEditType);             //Prepare dialog layout
-        }else {       // Callback Get the fields from the editbox
-            String devName = mGetText(inCB[1]);
-            mProtocol().mConnectNamedDevice(devName);
+            for (int i = 0; i < oaProtocols.length; i++) {
+                final int finalI = i;
+                mLayoutAddCmd2(oaProtocols[i].sProtName(),oaProtocols[i].getState().toString()).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mDoConnect(finalI);
+                        mClose(mAlertDialog);
+                    }
+                });
+
+            }
+            mDialogSetup2("Device status", oEditType);             //Prepare dialog layout
+        }else {
             oEditType = eEditType.kNull;
             return;
         }
     }
 
-    public static void mElemViewProps(cElemViewProps oElem) {       //170912        Sets the current view element
-        oElemViewProps=oElem;
+    private static void mStartServerService() {
+        if (mProtocol()!=null) {
+            mProtocol().oSerial.mStartServerService();
+        }
+    }
+
+    public static void mSettingsFile_Select() {  //return arguments via cbSettingsFile
+        mLinLayPrep2();
+        oOptionBox = new cOptionBox(mContext);
+        oOptionBox.createRadioButton("Type  ", "Factory;Downloads;Internal",nSettingsDestIdx,true);
+        oOptionBox.setListener(new cOptionBox.ChangeListener() {
+                @Override
+                public void onChange(int nIndex) {
+                    nSettingsDestIdx = nIndex;
+                    mSettingsFile_Select();
+                }
+            });
+            mAddLine2Layout(oOptionBox, null);
+        if (nSettingsDestIdx==0)
+            cbSettingsFile=mLayoutAddDropDown3("Factory file ", mGetRawFileNames(), sFile_ProtCfg.replace(".xml",""));
+        else if (nSettingsDestIdx==1)
+            cbSettingsFile=mLayoutAddDropDown3("Downloads file ", mGetDownloadFileNames(".txt"), sFile_ProtCfg.replace(".txt",""));
+        else
+            cbSettingsFile=mLayoutAddDropDown3("Settings file ", mGetPrefFileNames(".xml"), sFile_ProtCfg.replace(".xml",""));
+        mDialogSetup2("Settings status", oEditType);             //Prepare dialog layout
+    }
+    private static void mSettingsFile_Set(String sFileName) {
+        String s="//"+sFileName+"\n";
+        if (oOptionBox.mGetCheckedIndex()==0) {
+            s =s+ cFileSystem.mFileRead_Raw(sFileName);
+            ((cSetupFile)oFocusdActivity).mEditText(s);
+        }
+        else if (oOptionBox.mGetCheckedIndex()==1){
+            s = s+mFileRead(mContext,sFileName );
+            ((cSetupFile)oFocusdActivity).mEditText(s);
+        } else {
+            cFileSystem.mPrefFileNameSet(sFileName);
+            s = s+mPref2Str("");
+            ((cSetupFile)oFocusdActivity).mEditText(s);
+        }
+        mPersistAllData(true,sFileName);  //Load setup
+    }
+
+    private static void mVal(CheckBox cbDownloadsFolder, boolean b) {
+        if (cbDownloadsFolder==null) return;
+        cbDownloadsFolder.setChecked(b);
+    }
+
+    private static boolean mVal(CheckBox cb) {
+        if (cb==null) return false;
+        return cb.isChecked();
+    }
+
+    private static void mDoConnect(int i) {
+        oaProtocols[i].mStateSet(kDoConnect1);
+    }
+
+    private static int nMyProtNr() {
+        if (myProtIdx<0) myProtIdx=0;
+        if (myProtIdx>oaProtocols.length)myProtIdx=oaProtocols.length-1;
+        return myProtIdx;
     }
 
     public static void mRefresh(boolean doRedraw) {         //Refresh/draw the ui interface
         //Command selector
         if (doRedraw) {
             oElemViewProps=mGetActiveControl(oFocusedView);     //170915    Return active control of active view
-            mCommand(false);            //Redraw the command button
         }
     }
 
@@ -160,14 +244,12 @@ public class cUInput {
 
     }
 
-
     public enum eEditType {
         kNull,
         kValue,
-
         kSelProtDataElem,       //Select data element associated with the control
         kProtDataCalib, kInputRange,
-        kConnect, kViewSettingsEdit, kBitNames, kUserLevel, kInputSelectDevice, kEditDescription
+        kConnect, kViewSettingsEdit, kBitNames, kUserLevel, kInputSelectDevice, kSelectProtocol, kSelectElement, kEditDescription
     }
 
     // --------------                   ************    INTERFACE  *******************
@@ -177,6 +259,7 @@ public class cUInput {
         return inCB.getSelectedItem().toString();
     }
     private static String mGetText(EditText txtEdit) {         //Get the return value for an input
+        if(txtEdit==null) return "";
         return txtEdit.getText().toString();
     }
 
@@ -188,10 +271,10 @@ public class cUInput {
         } else mErrMsg("Not implemented");
     }
 
-    private static cProtocol3 mProtocol() {     //Return the current protocol
-        if (oElemViewProps==null)
-            return  oProtocol[nCurrentProtocol];
-        return oElemViewProps.mProtocol();
+    private static cProtocol3 oProtocol() {     //Return the current protocol
+        if (mElement()!=null)
+            return mElement().myProtocol();
+        return  oaProtocols[0];
     }
 
                     //......................        INPUT A DISPLAY RANGE   ................
@@ -199,22 +282,22 @@ public class cUInput {
         if (oElemViewProps==null) return;
         if (bAsk){            //First call set the inputboxes
             mLinLayPrep2();     //Prepare mInputRange
-            mLayoutAddTextEdit(0,"Minimum visible value", mGetElemObj().nDisplayRange[0]);
-            mLayoutAddTextEdit(1,"Maximum visible value", mGetElemObj().nDisplayRange[1]);
+            mLayoutAddTextEdit(0,"Minimum visible value", mElement().nDisplayRange[0]);
+            mLayoutAddTextEdit(1,"Maximum visible value", mElement().nDisplayRange[1]);
             mLayoutAddCmd(3,"Do autoscaling").setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {       //R170627
                     oElemViewProps.mAutoRange(true);
-                    mEditAccept(false);
+                    mEditRedraw(false);
                 }
             });
             mDialogSetup1(oElemViewProps.mAlias());          //Set dialog boxes
             oEditType = eEditType.kInputRange;                                   //Start editing data
         }
         else if ((oEditType == eEditType.kInputRange)){      //Accept data
-            mGetElemObj().nDisplayRange[0] =mStr2Float(nTextEditGet(0), mGetElemObj().nDisplayRange[0]);
-            mGetElemObj().nDisplayRange[1]=mStr2Float(nTextEditGet(1),  mGetElemObj().nDisplayRange[1]);
+            mElement().nDisplayRange[0] =mStr2Float(nTextEditGet(0), mElement().nDisplayRange[0]);
+            mElement().nDisplayRange[1]=mStr2Float(nTextEditGet(1),  mElement().nDisplayRange[1]);
 //!-            oElemViewProps.mSetSlider(mStr2Float(nTextEditGet(2)));
-            mPersistAllData(false);
+            isDirty=true;
             oEditType = eEditType.kNull;
             return;
         }
@@ -231,19 +314,19 @@ public class cUInput {
             if (oElemViewProps==null)
                 return;
             String sTitle=oElemViewProps.mGetName();
-            String s = mGetElemObj().mBitName(nEditIdx);
+            String s = mElement().mBitName(nEditIdx);
             mLayoutAddTextEdit(0,"Bit "+nEditIdx+" description",s);
-            index= mGetElemObj().mBitVisible(nEditIdx);
+            index= mElement().mBitVisible(nEditIdx);
             mLayoutAddDropDown1(1,"Visibility of control",lstViewStr,lstViewStr[index]);
             mDialogSetup1(sTitle);             //Prepare dialog layout
 
         }else {			//	Callback Get the fields from the editbox
             String s = mGetText(txtEdit[0]);
-            mGetElemObj().mBitName(nEditIdx,s);
+            mElement().mBitName(nEditIdx,s);
             index= mLayout_DropDown_SelIdx(1);
-            mGetElemObj().nBitVisible(nEditIdx,index);
+            mElement().nBitVisible(nEditIdx,index);
             oEditType = eEditType.kNull;
-            mPersistAllData(false);
+            isDirty=true;
             return;
         }
 
@@ -254,70 +337,12 @@ public class cUInput {
         return inCB[i].getSelectedItemPosition();
     }
 
-
-
-    public static void mInputViewSettings1(boolean bAsk) {     //if called with true it set up the dialog
-        if (oElemViewProps==null) return;
-        if (bAsk) {
-            oEditType = eEditType.kViewSettingsEdit;
-            mLinLayPrep2();         //prepare mInputViewSettings1
-            String s="empty";
-            mLayoutAddDropDown1(0,"Element   ",mElemNameList(),mElemName());
-            if (mGetElemObj()!=null) {
-                mLayoutAddDropDown1(1, "Index     ", mIndexStringArry(mGetElemObj()),mFocusedIndex());
-                mLayoutAddTextEdit(0, "Minimum visible value", mGetElemObj().nDisplayRange[0]);
-                mLayoutAddTextEdit(1, "Maximum visible value", mGetElemObj().nDisplayRange[1]);
-                mLayoutAddCheckbox(3, "Visible for userinput", mFocusedViewProps().bVisible());
-                mLayoutAddCheckbox(2, "Enabled for userinput", mFocusedViewProps().bEnabled());
-                mLayoutAddCheckbox(4, "Enabled WriteDeviceOnStart", mFocusedViewProps().bWriteOnStart());
-            }
-            mLayoutAddCmd(2,"Edit colors").setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {       //R170627
-                    mEditAccept(false); mStartColorPicker(oElemViewProps);
-                }
-            });
-            mLayoutAddCmd(3,"Edit description and alias").setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {       //R170627
-                    mEditAccept(false);                    mEditDescription(true);
-                }
-            });
-            mLayoutAddCmd(3,"Edit unit and conversion").setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {       //R170627
-                    mEditAccept(false);                    mInputProtData(true);
-                }
-            });
-            mButton_Scaling(bAsk);
-
-            if ( oElemViewProps.oGetElem()!=null)s = oElemViewProps.mAlias();
-            mDialogSetup1(s);             //Prepare dialog layout, needs to be last
-
-        }else        if ((oEditType == eEditType.kViewSettingsEdit)){			//	Callback
-            //Get the fields from the editbox
-            String sRetVal =mGetText(inCB[0]);//
-            if (mGetElemObj()!=null) {
-                int idx = mLayout_DropDown_SelIdx(1);
-                oElemViewProps.nCurrDataIndex = mLimit(0, idx, oElemViewProps.oGetElem().nDataLength() - 1);
-                mGetElemObj().nDisplayRange[0] = mStr2Float(nTextEditGet(0), mGetElemObj().nDisplayRange[0]);
-                mGetElemObj().nDisplayRange[1] = mStr2Float(nTextEditGet(1), mGetElemObj().nDisplayRange[1]);
-            }
-            if (mGetElemObj()!=null) {
-                mFocusedViewProps().bEnabled( cbCheck[2].isChecked());
-                mFocusedViewProps().bVisible( cbCheck[3].isChecked());
-                mFocusedViewProps().bWriteOnStart(cbCheck[4].isChecked());
-                mGetElemObj().mSettings(false);         //mFileSave settings
-            }
-            oElemViewProps.setElementByName(sRetVal);
-            oEditType = eEditType.kNull;
-            mPersistAllData(false);
-        }
-    }
-
     private static void mButton_Scaling(boolean bAsk) {     //Add a scaling command button
         if (oFocusedView instanceof  cSignalView2) {
             mLayoutAddCmd(4, "Do autoscaling").setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {       //R170627
                     oElemViewProps.mAutoRange(true);
-                    mEditAccept(false);
+                    mEditRedraw(false);
                 }
             });
             return;
@@ -331,36 +356,90 @@ public class cUInput {
         }
     }
 
-     private static void mApplySameScale() {        //Apply the same scaling to other handles in the sliderview
+
+
+    public static void mInputViewSettings1(boolean bAsk) {     //if called with true it set up the dialog
+        if (oElemViewProps==null) return;
+        if (bAsk) {
+            oEditType = eEditType.kViewSettingsEdit;
+            mLinLayPrep2();         //prepare mInputViewSettings1
+            mLayoutAddDropDown2(cbProtNr,"Device    ",sDevices2, sProtName());
+            mLayoutAddDropDown2(cbElemNr, "Element   ", mElemNameList(), sElemName());
+            if (mElement()!=null) {
+                mLayoutAddDropDown2(cbElemIndex, "Index     ", mIndexStringArry(mElement()), oElemViewProps.mGetElemIdx());
+                mLayoutAddTextEdit(0, "Minimum visible value", mElement().nDisplayRange[0]);
+                mLayoutAddTextEdit(1, "Maximum visible value", mElement().nDisplayRange[1]);
+                mLayoutAddCheckbox(3, "Visible for userinput", mFocusedViewProps().bVisible());
+                mLayoutAddCheckbox(2, "Enabled for userinput", mFocusedViewProps().bEnabled());
+                mLayoutAddCheckbox(4, "Enabled WriteDeviceOnStart", mFocusedViewProps().bWriteOnStart());
+            }
+            mLayoutAddCmd(2,"Edit colors").setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {       //R170627
+                    mStartColorPicker(oElemViewProps);  //Close dialog and open another
+                }
+            });
+            mLayoutAddCmd(3,"Edit description and alias").setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {       //R170627
+                    mClose(mAlertDialog);
+                    mEditDescription(true);
+                }
+            });
+            mLayoutAddCmd1("Edit unit and conversion").setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {       //R170627
+                    mClose(mAlertDialog);
+                    mInputProtData(true);
+                }
+            });
+            mButton_Scaling(bAsk);
+
+            mDialogSetup2("Edit "+oCtrlID(),oEditType);             //Prepare dialog layout, needs to be last
+        }else        if ((oEditType == eEditType.kViewSettingsEdit)){			//	Callback
+            //Get the fields from the editbox
+            if (mElement()!=null) {
+                int idx = mLayout_DropDown_SelIdx(1);
+                mElement().nDisplayRange[0] = mStr2Float(nTextEditGet(0), mElement().nDisplayRange[0]);
+                mElement().nDisplayRange[1] = mStr2Float(nTextEditGet(1), mElement().nDisplayRange[1]);
+            }
+            if (mElement()!=null) {
+                mFocusedViewProps().bEnabled( cbCheck[2].isChecked());
+                mFocusedViewProps().bVisible( cbCheck[3].isChecked());
+                mFocusedViewProps().bWriteOnStart(cbCheck[4].isChecked());
+            }
+
+            oEditType = eEditType.kNull;
+            isDirty=true;
+        }
+    }
+
+
+
+    private static void mApplySameScale() {        //Apply the same scaling to other handles in the sliderview
         if (oFocusedView instanceof  cSliderView) {
             cSlider o = ((cSliderView) oFocusedView).oParent;
             if (o==null ) return;
-            o.mApplySameScale();                mEditAccept(false);
+            o.mApplySameScale();
+            mEditRedraw(false);
         }
     }
 
     private static cElemViewProps mFocusedViewProps() {
         return oElemViewProps;
     }
-    private static cProtElem mGetElemObj() {
-        if (oElemViewProps==null) return null;
-        if (oElemViewProps.oGetElem()==null)            return null;
-        return oElemViewProps.oGetElem();
+    private static cProtElem mElement() {
+        if (oElemViewProps==null)
+            return null;
+        return oElemViewProps.myProtElem1();
+    }
 
-    }
-    private static int mFocusedIndex() {
-        return  oElemViewProps.nCurrDataIndex;
-    }
 
     private static String[] mElemNameList() {
-        String[] sList = mStr2StrArr("None," + mStrArr2Str(mProtocol().mGetProtElementList()));
+        String[] sList = oProtocol().mGetProtElementList();
         return sList;
     }
 
-    private static String mElemName() {     //Return name of current element
-        if (mGetElemObj()==null)
-                return                "Tomt";
-        return mGetElemObj().sElemName();
+    static String sElemName() {     //Return name of current element
+        if (mElement()==null) return "";
+        return mElement().sElemName();
     }
 
     private static void mStartColorPicker(cElemViewProps oProtElem) {
@@ -371,41 +450,60 @@ public class cUInput {
 //              EDIT THE CONTROL ELEMENT
     public static void mInputProtData(boolean bAsk) {     //if called with true it set up the dialog  170627B
         if (oElemViewProps==null)            return;
-        if (mGetElemObj()==null) return;
+        if (mElement()==null) return;
         if (bAsk){
             oEditType = eEditType.kProtDataCalib;
             mLinLayPrep2();
             //Now set the fields
-            mLayoutAddTextEdit(0, mGetElemObj().sElemName()+" integer offset", mGetElemObj().nOffset);
-            mLayoutAddTextEdit(1,"integer conversion factor", mGetElemObj().nFactor);
-            mLayoutAddTextEdit(2,"Units of conversion ", mGetElemObj().sUnit);             //input units
+            mLayoutAddTextEdit(0, mElement().sElemName()+" integer offset", mElement().nOffset);
+            mLayoutAddTextEdit(1,"integer conversion factor", mElement().nFactor);
+            mLayoutAddTextEdit(2,"Units of conversion ", mElement().sUnit);             //input units
             int i = oElemViewProps.mRawValue();
-            mLayoutAddTextEdit(3, mGetElemObj().mGetValueText(oElemViewProps.nCurrDataIndex)+" = Int:",i);
+            mLayoutAddTextEdit(3, mElement().mGetValueText(oElemViewProps.mGetElemIdx())+" = Int:",i);
             mDialogSetup1(oElemViewProps.mAlias());             //protocol data setup
         }else if ((oEditType == eEditType.kProtDataCalib)){
             //Get the fields from the editbox
-            mGetElemObj().nOffset= mStr2Int(nTextEditGet(0));
-            mGetElemObj().nFactor=mStr2Float(nTextEditGet(1), mGetElemObj().nFactor);
-            mGetElemObj().sUnit=(nTextEditGet(2));
-            mGetElemObj().mSettings(false);       //mFileSave settings
+            mElement().nOffset= mStr2Int(nTextEditGet(0));
+            mElement().nFactor=mStr2Float(nTextEditGet(1), mElement().nFactor);
+            mElement().sUnit=(nTextEditGet(2));
+            isDirty=true;
             oEditType = eEditType.kNull;
             return;
         }
     }
 
+    public static void mInputRefresh(boolean doOpen) {        //Input a single value,   R170727
+        if (doOpen) {
+            mCommunicate( false);
+            mLinLayPrep2();
+            mLayoutAddTextEdit2("Refresh time", cProgram3.mLoopTime);
+            txtRefresh=mLayoutAddTextEdit2("Current rate", nRefreshRate());
+            mDialogSetup1("Refresh rate");          //Set dialog boxes
+        } else {
+            if (txtRefresh == null) return;
+            if (mGetText(txtRefresh )!= "") {
+                int n = mStr2Int(mGetText(txtRefresh));
+                nRefreshRate(n);
+            }
+            mCommunicate(true);
+            oEditType = eEditType.kNull;
+            txtRefresh = null;       //Remove as it is done
+        }
+    }
 
     public static void mInputValue(boolean bAsk) {        //Input a single value,   R170727
         if (oElemViewProps==null)            return;
-        if (mGetElemObj()==null) return;
+        if (mElement()==null) return;
         if(bAsk){
-            cProtElem myProtData= oElemViewProps.oGetElem();
+            cProtElem myProtData= oElemViewProps.myProtElem1();
+            if (myProtData.myVarId <=0) return;
             oEditType = eEditType.kValue;
             mLinLayPrep2();
-            if (mGetElemObj().mIsInt())
+            if (mElement().mIsInt())
                 mLayoutAddTextEdit(0,"Value",(int)oElemViewProps.mGetValue());
             else
                 mLayoutAddTextEdit(0,"Value",oElemViewProps.mGetValue());
-            if (cProgram3.nUserLevel()>0) {
+            if (cProgram3.mPrivileges()>0) {
                 mLayoutAddTextEdit(1, "Raw Data", oElemViewProps.mRawValue());
                 txtEdit[1].setEnabled(false);
             }
@@ -421,29 +519,24 @@ public class cUInput {
     }
     //************   END  INTERFACE  *******************
     public static void mSetColorIndex(int nColorIndex, int nColorLayer) {      //Set first/second color
-        cProtElem e = oElemViewProps.oGetElem();
-        int idx = oElemViewProps.nCurrDataIndex;
+        cProtElem e = oElemViewProps.myProtElem1();
+        int idx = oElemViewProps.mGetElemIdx();
         e.mColorIndexSet(idx,nColorLayer, nColorIndex);
     }
 
     //........................          HANDLING THE FOCUS OF VIEW CONTROLS................
-    public static void setFocus(Object obj) {            //Set the focus on this control. !!! to implement some focus rectangle
-        oElemViewProps=mGetActiveControl(obj);
-        oFocusedView=(View)obj;
-        /*!-    cleaning 170919
-        if (obj instanceof cVertSlider2){
-            mContext=((cVertSlider2) obj).getContext();
-        }  */
-        if (obj instanceof cSignalView2){
-            mContext=((cSignalView2) obj).getContext();
-        } else if (obj instanceof cElemViewProps){
-            mContext=oElemViewProps.mParent();
-        } else if (obj instanceof cSliderView){
-            mContext=((cSliderView)obj).getContext();
+    public static void mSetFocus(Object obj) {            //Set the focus on this control. !!! to implement some focus rectangle
+        oFocusedView=null;
+        if (obj instanceof View) {
+            oElemViewProps = mGetActiveControl(obj);
+            oFocusedView = oElemViewProps.myView;
+            if (oFocusedView==null) oFocusedView= (View) obj;
+            mContext = ((View) obj).getContext();
+        }else{
+            mErrMsg("To implement");
         }
-        mRefresh(true);
+        mCommand(false);
     }
-
     private static cElemViewProps mGetActiveControl(Object oView) {//170915 Return the focused ViewProps of the given View
         if (oView instanceof cSignalView2){
             return ((cSignalView2)oView).oElemViewProps();
@@ -467,51 +560,52 @@ public class cUInput {
 	*/
         if (!(oFocusdActivity instanceof fMain)) return;	//Only on mainscreen
 //	Undefined protocol
-        if (!mIsStateSerial1(kBT_Connected1)) {               //171012    Not connected
-            if (mIsStateSerial1(kBT_ConnectReq1)) {                //Timeout
-                cmdText(cKonst.eTexts.txtDevice_Connecting);
-                if (bExecute) mProtocol().oSerial.mBT_PickDevice1();
+     if (mIsStateSerial1(kBT_ConnectReq1)) {                //Timeout
             }else if (mIsStateSerial1(kBT_InvalidDevice1)){                //Invalid device
-                cmdText("Select a device - press");
-                if (bExecute) mProtocol().oSerial.mBT_PickDevice1();
-            }else if (mIsStateSerial1(kBT_TimeOut)){                //Timeout
-                cmdText(cKonst.eTexts.txtDevice_TimeOut);
-                if (bExecute) mProtocol().mProtResetReq();
+                fMain.cmdText("Select a device - press");
+                if (bExecute)
+                    mInputSelectDevice(true);
+
             }else if (mIsStateSerial1(kBT_BrokenConnection)){                //Timeout
-                cmdText("Lost connection");
+                fMain.cmdText("Lost connection");
                 if (bAutoConnect())
                     mTryToConnect();
                 if (bExecute)mTryToConnect();
             }else if ( mIsStateSerial1(kBT_DevicePickerActive)) {
-                cmdText("Select a device ");
+                fMain.cmdText("Select a device ");
                 if (bExecute) mTryToConnect();
-            }else if ( mIsStateSerial1(kDeviceWasSelected)) {
-                String s=mProtocol().mDeviceNameGet();
-                mProtocol().mConnectNamedDevice(s);          //  Will initiate a connection
-            } else {
-                cmdText(txtConnectionError());
-                if (bExecute) mTryToConnect();
-            }
-        }else if ( mIsStateProtocol(kProtResetReq1)) {
-            cmdText("Resetting Protocol "+ nTestCount[0]);
+            }else if ( mIsStateSerial1(kDeviceWasSelected)) {       //To obsolete
+                String s= oProtocol().mDeviceNameGet();
+                oProtocol().mDeviceNameSet(s);          //  Will initiate a connection
 
         }else if ( mIsStateProtocol(kProtInitDone)) {
-            cmdText("Protocol Ready "+ nTestCount[0]);
+            fMain.cmdText("Protocol Ready "+ nTestCount[0]);
         }else if ( mIsStateProtocol(kProtUndef1)) {
-            cmdText("Undefined Protocol "+ nTestCount[0]);
+            fMain.cmdText("Undefined Protocol "+ nTestCount[0]);
             if (bExecute) mTryToConnect();
         }else if (mIsStateProtocol(kProtInitInProgress)) {
-            cmdText(cKonst.eTexts.txtDevice_Initializing+" "+  oProtocol[nCurrentProtocol].mGetProtSize() );
+            fMain.cmdText(cKonst.eTexts.txtDevice_Initializing+" "+  oaProtocols[nMyProtNr()].mProtElemLength() );
             if (bExecute) mTryToConnect();
-        }else if (sErrMsg!=null) {                          //Error was encountered tell the user
-            cmdText(sErrMsg);
-            if (bExecute) mProtocol().mProtResetReq();
-        }else if (mGetElemObj()!= null) {
-            cmdText(oElemViewProps.mDescr());
-            if (bExecute) mInputValue(true);
+        }else if (mConnectionFault()) {                          //Error was encountered tell the user
+            fMain.mCommandSet("Try Reset "+sProtName());
+            mMsgStatus("Not Connected");
+            if (bExecute) mProtStateSet(kDoConnect1);
+        }else if (mElement()!=null) {
+            fMain.cmdText(mGetCtrlDescr());
+            mMsgStatus(mElement().sProtName());
+            if (bExecute) cUInput.mInputValue(true);
         }else {
-            cmdText("Select control, change value here");
-        }
+            mMsgStatus("Connect device");
+            if (bExecute) mDoConnect(0);
+     }
+
+
+    }
+
+    private static boolean mConnectionFault() {
+        if(mElement()==null) return false;
+        if(mElement().myProtocol()==null) return false;
+        return (mElement().myProtocol().getState()!=kProtReady);
     }
 
     private static String txtConnectionError() {
@@ -525,27 +619,36 @@ public class cUInput {
     }
 
     protected static boolean mIsStateSerial1(cKonst.eSerial nSerialState) {
-        cKonst.eSerial v = oProtocol[nCurrentProtocol].oSerial.mStateGet();
-        return nSerialState== v;
+        if (nMyProtNr() > 0){
+            cKonst.eSerial v = oaProtocols[nMyProtNr()].oSerial.mStateGet();
+            return nSerialState == v;
+        } else
+            return false;
     }
 
     private static void mTryToConnect() {
-
-        mProtocol().mProtResetReq();
+        for (int i = 0; i< oaProtocols.length; i++)
+            oaProtocols[i].mRequestConnection();
     }
 
     private static void mProtStateSet(cKonst.eProtState nNewState) {
-        oProtocol[nCurrentProtocol].mStateSet(nNewState);
+        if (mProtocol()!=null)
+            mProtocol().mStateSet(nNewState);
+    }
+
+    private static cProtocol3 mProtocol() {
+        if (mElement()==null) return null;
+        return mElement().myProtocol();
     }
 
     private static boolean mIsStateProtocol(cKonst.eProtState nProtState) {
         if (mIsStateSerial1(kBT_Connected1))
-            return nProtState==oProtocol[nCurrentProtocol].getState();
+            return nProtState== oaProtocols[nMyProtNr()].getState();
         else {        //DO a check of states
             if (mIsStateSerial1(kBT_BrokenConnection))
-                mProtocol().mProtResetReq();
+                oProtocol().mRequestConnection();
         }
-        return nProtState==oProtocol[nCurrentProtocol].getState();
+        return nProtState== oaProtocols[nMyProtNr()].getState();
     }
 
 
@@ -570,6 +673,116 @@ public class cUInput {
         lbl.setText(sDesc);
         mTextViewSetTextSize(lbl);
         return lbl;
+    }
+    //171219    Return a  drop down element
+    private static Spinner mLayoutAddDropDown3(String sDesc, String[] sList, String sSelected) {
+        int idx=mArrayFind(sList,sSelected);
+        if (idx<0) idx=0;   //Limit imput range to be safe
+        if (idx>=sList.length) idx=sList.length-1;
+        return mLayoutAddDropDown3(sDesc,sList,idx);
+    }
+    private static Spinner mLayoutAddDropDown3(String sDesc, String[] sList, int idx) {
+        Spinner inCB =new Spinner(mContext);
+        TextView lblLbl1 = new TextView(mContext);
+        lblLbl1.setText(sDesc);
+        ArrayAdapter<String> adapter1=mMakeSpinnerAdapter(mContext,sList);
+        inCB.setAdapter(adapter1);
+        inCB.setSelection(idx);
+        inCB.setEnabled(false);
+        inCB.setOnItemSelectedListener(new OnItemSelectedListener() {    //These will fire automatically
+            @Override
+            public void onItemSelected(AdapterView<?> combobox, View view, int i, long l) {
+                if (combobox.isEnabled()) {      //NOw see if user has changed it
+                    if (mStr2Int(combobox.getTag().toString())!=i) {
+                        isDirty = true;
+                        if (combobox == cbProtNr) { //Change the protocol index
+                            mSetProtocol(mGetText(cbProtNr));
+                        }
+                        if (combobox == cbElemNr) { //Change the element
+                            mSetElement(mGetText(cbElemNr));
+                        }
+                        if (combobox == cbElemIndex) { //Change the index
+                            mSetElemIdx(cbElemIndex.getSelectedItemPosition());
+
+                        }
+                    }
+                    mRedrawInput();  //Accept and Reopen the editor
+
+                }
+                else {
+                    combobox.setEnabled(true);
+                }
+                combobox.setTag(i);      //Set the last index
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+        mAddLine2Layout(lblLbl1,inCB);
+        return inCB;
+    }
+
+    //170728    More recent drop down list accepting and index as selected item
+    private static void mLayoutAddDropDown2(Spinner inCB, String sDesc, String[] sList, String sSelected) {
+        int idx=mArrayFind(sList,sSelected);
+        if (idx<0) idx=0;   //Limit imput range to be safe
+        if (idx>=sList.length) idx=sList.length-1;
+        mLayoutAddDropDown2(inCB,sDesc,sList,idx);
+    }
+    private static void mLayoutAddDropDown2(Spinner inCB, String sDesc, String[] sList, int idx) {
+        TextView lblLbl1 = new TextView(mContext);
+        lblLbl1.setText(sDesc);
+        ArrayAdapter<String> adapter1=mMakeSpinnerAdapter(mContext,sList);
+        inCB.setAdapter(adapter1);
+        inCB.setSelection(idx);
+        inCB.setEnabled(false);
+        inCB.setOnItemSelectedListener(new OnItemSelectedListener() {    //These will fire automatically
+            @Override
+            public void onItemSelected(AdapterView<?> combobox, View view, int i, long l) {
+                if (combobox.isEnabled()) {      //NOw see if user has changed it
+                    if (mStr2Int(combobox.getTag().toString())!=i) {
+                        isDirty = true;
+                        if (combobox == cbProtNr) { //Change the protocol index
+                            mSetProtocol(mGetText(cbProtNr));
+                        }
+                        if (combobox == cbElemNr) { //Change the element
+                            mSetElement(mGetText(cbElemNr));
+                        }
+                        if (combobox == cbElemIndex) { //Change the index
+                            mSetElemIdx(cbElemIndex.getSelectedItemPosition());
+
+                        }
+                    }
+                    mRedrawInput();  //Accept and Reopen the editor
+
+                }
+                else {
+                    combobox.setEnabled(true);
+                }
+                combobox.setTag(i);      //Set the last index
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+        mAddLine2Layout(lblLbl1,inCB);
+    }
+
+    private static void mSetElemIdx(int i) {
+        oElemViewProps.mSetElemIdx(i);
+    }
+
+    private static void mSetElement(String s) {
+       oElemViewProps.mSetElement(        oElemViewProps.mGetProtName(),s);
+    }
+
+    private static void mSetProtocol(String s) {
+        oElemViewProps.mSetElement(s,        oElemViewProps.mGetElemName());
+    }
+
+    private static String sProtName() {
+        if (mElement()==null) return "Null";
+        return mElement().sProtName();
     }
 
     //170728    More recent drop down list accepting and index as selected item
@@ -642,7 +855,7 @@ public class cUInput {
                        ((EditText)v).selectAll();        //But it's not easy to read then
                 if (v.isEnabled()==false){
                     if (bReturnKeyPressed)
-                        mEditAccept(false);     //accept and close
+                        mEditAccept1();     //accept and close
                 }
             }
         });
@@ -651,7 +864,7 @@ public class cUInput {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    mEditAccept(false);
+                    mEditAccept1();
 
                     bReturnKeyPressed=true;
                     return true;
@@ -662,7 +875,84 @@ public class cUInput {
         });
 
     }
+    private static EditText mLayoutAddTextEdit2(String sDesc, Object Value) {
+        TextView lblLbl = mNewLabel(sDesc);
+        txtEdit[0] = new EditText(mContext);
+        txtEdit[0].setText(""+Value);
+        txtEdit[0].setMaxLines(1);
+        if (Value instanceof Integer) {
+            txtEdit[0].setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+        }
+        else if (Value instanceof Float)
+            txtEdit[0].setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+        else {
+            txtEdit[0].setRawInputType(InputType.TYPE_CLASS_TEXT);
+        }
+        mAddLine2Layout((View) lblLbl,(View) txtEdit[0]);
+        txtEdit[0].setFocusableInTouchMode(true);
+        txtEdit[0].setHighlightColor(Color.BLACK);
+        mShowKeyboard(txtEdit[0]);
+        return txtEdit[0];
+    }
 
+    private static void mLayoutAddTextEdit1(EditText[] txtEdit, String sDesc, Object Value) {
+        TextView lblLbl = mNewLabel(sDesc);
+        txtEdit[0] = new EditText(mContext);
+        txtEdit[0].setText(""+Value);
+        txtEdit[0].setMaxLines(1);
+        if (Value instanceof Integer) {
+            txtEdit[0].setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+        }
+        else if (Value instanceof Float)
+            txtEdit[0].setRawInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL|InputType.TYPE_NUMBER_FLAG_SIGNED);
+        else {
+            txtEdit[0].setRawInputType(InputType.TYPE_CLASS_TEXT);
+        }
+        mAddLine2Layout((View) lblLbl,(View) txtEdit[0]);
+        txtEdit[0].setFocusableInTouchMode(true);
+        txtEdit[0].setHighlightColor(Color.BLACK);
+        mShowKeyboard(txtEdit[0]);
+    }
+
+    private static void mShowKeyboard(TextView txtEdit) {
+        if (!bHideKeyboard)
+            txtEdit.setOnFocusChangeListener(new View.OnFocusChangeListener(){
+                public void onFocusChange(View v, boolean hasFocus){
+                    if (hasFocus)
+                        ((EditText)v).selectAll();        //But it's not easy to read then
+                    if (v.isEnabled()==false){
+                        if (bReturnKeyPressed)
+                            mEditAccept1();     //accept and close
+                    }
+                }
+            });
+        //Handle the users next click on keyboard
+        txtEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    mEditAccept1();
+                    bReturnKeyPressed=true;
+                    return true;
+                }
+                bReturnKeyPressed=false;
+                return false;
+            }
+        });
+
+    }
+
+    private static CheckBox mLayoutAddCheckbox3(String sDesc, boolean b) {
+        TextView lblLbl = new TextView(mContext);
+        lblLbl.setText(sDesc);
+        CheckBox cbCheck1 = new CheckBox(mContext);
+        cbCheck1.setChecked(b);
+//        cbCheck1.setOnClickListener(new View.OnClickListener() {             public void onClick(View v) //R170627C
+//        {
+//            mRedrawInput();        }});
+        mAddLine2Layout(lblLbl,cbCheck1);
+        return cbCheck1;
+    }
 
     private static CheckBox mLayoutAddCheckbox(int i, String sDesc, boolean b) {
         lblLbl[i] = new TextView(mContext);
@@ -679,11 +969,25 @@ public class cUInput {
 
     private static void mRedrawInput() {
         eEditType et = oEditType;
-        mEditAccept(false);
+        mEditRedraw(false);
         oEditType =et;
-        mEditAccept(true);          //Reopen with new values when checked
+        mEditRedraw(true);          //Reopen with new values when checked
     }
 
+    private static Button mLayoutAddCmd2(String sDesc,String sCmdTxt) {
+        /* add a command button to the layout see: R170627  for using        */
+        Button cmdCmd1 = new Button(mContext);
+        cmdCmd1.setText(sCmdTxt);
+        mAddLine2Layout(mNewLabel(sDesc),cmdCmd1);
+        return cmdCmd1;
+    }
+    private static Button mLayoutAddCmd1(String sDesc) {
+        /* add a command button to the layout see: R170627  for using        */
+        Button cmdCmd1 = new Button(mContext);
+        cmdCmd1.setText(sDesc);
+        mAddLine2Layout(null,cmdCmd1);
+        return cmdCmd1;
+    }
     private static Button mLayoutAddCmd(int i, String sDesc) {
         /* add a command button to the layout see: R170627  for using        */
         cmdCmd = new Button(mContext);
@@ -693,6 +997,7 @@ public class cUInput {
     }
 
     private static String nTextEditGet(int i) {
+        if (txtEdit[i]==null) return "";
         return txtEdit[i].getText().toString();
     }
 
@@ -705,11 +1010,15 @@ public class cUInput {
             lp.gravity= Gravity.LEFT;
             lp.weight=0.25f;
             view1.setLayoutParams(lp);
-            horizontalLayout.addView(view1);
+            try {
+                horizontalLayout.addView(view1);
+            } catch (Error e){}
         }
         if (view2!=null) {
             lp.gravity = Gravity.RIGHT;
             lp.weight = 0.25f;
+            if (view2.getParent()!=null)
+                ((ViewGroup)view2.getParent()).removeView(view2);
             view2.setLayoutParams(lp);
             horizontalLayout.addView(view2);
         }
@@ -723,23 +1032,54 @@ public class cUInput {
             mLinLayPrep2();             //protocol data setup
             mLayoutAddTextEdit(0,"Descriptor of the variable      ", oElemViewProps.mDescr());
             mLayoutAddTextEdit(1,"Short alias name of the variable", oElemViewProps.mAlias());
-            mDialogSetup1(mGetElemObj().sElemName());
+            mDialogSetup2(mElement().sElemName(),eEditType.kEditDescription);
         }
         else if ((oEditType == eEditType.kEditDescription)){
             //Get the fields from the editbox
             oElemViewProps.mDescr(nTextEditGet(0));                 //Input description
             oElemViewProps.mAlias(nTextEditGet(1));
-            mGetElemObj().mSettings(false);       //mFileSave settings
+            isDirty=true;
             oEditType = eEditType.kNull;
             mRedrawParent();
             return;
         }
     }
 
+    //Dispatcher for the response
+    private static void mEditAccept1() {  //R170522 open/close and accept a dialog b
+        if ((cbSettingsFile!=null)&(oFocusdActivity instanceof cSetupFile)){
+            String sFileName =mGetText(cbSettingsFile);
+            mSettingsFile_Set(sFileName);
+            cbSettingsFile=null;
+        }
+        boolean bOpen = false;
+        if (eEditType.kValue== oEditType){
+            mInputValue(bOpen );
+        }   else if (eEditType.kProtDataCalib== oEditType){
+            mInputProtData(bOpen);
+        }   else if (eEditType.kViewSettingsEdit== oEditType){
+            mInputViewSettings1(bOpen);
+        }  else if (eEditType.kInputRange== oEditType) {
+            mInputRange(bOpen);
+        }  else if (eEditType.kInputSelectDevice== oEditType) {
+            mInputSelectDevice(bOpen);
+        }  else if (eEditType.kEditDescription== oEditType) {
+            mEditDescription(bOpen);
+        }  else if (eEditType.kSelProtDataElem== oEditType){
+            //mSelProtElem(bOpen);
 
-    private static void mEditAccept(boolean bOpen) {  //R170522 open/close and accept a dialog b
-        //Dispatcher for the response
+        }  else if (eEditType.kBitNames== oEditType){      //Accept mEditBitDesc
+            mEditBitDesc(bOpen,0);
+        }
 
+     if (bOpen==false) mClose(mAlertDialog);
+        bDoRedraw=true;             //Redraw all windows
+    }
+
+
+
+    private static void mEditRedraw(boolean bOpen) {  //R170522 open/close and accept a dialog b
+        if (cbSettingsFile!=null) return;
         if (eEditType.kValue== oEditType){
             mInputValue(bOpen );
         }   else if (eEditType.kProtDataCalib== oEditType){
@@ -755,12 +1095,12 @@ public class cUInput {
         }  else if (eEditType.kSelProtDataElem== oEditType){
             //mSelProtElem(bOpen);
         }  else if (eEditType.kUserLevel== oEditType){
-            mUserLevel(bOpen);
+
         }  else if (eEditType.kBitNames== oEditType){      //Accept mEditBitDesc
             mEditBitDesc(bOpen,0);
         }
 
-      //  if (bOpen==false) mAlertDialog.dismiss();
+        if (bOpen==false) mClose(mAlertDialog);
         bDoRedraw=true;             //Redraw all windows
     }
 
@@ -772,6 +1112,10 @@ public class cUInput {
     private cUInput(){};
     public static cUInput mInit(Context mThis) {
         mContext=mThis;
+        cbProtNr =new Spinner(mContext);
+        cbElemNr =new Spinner(mContext);
+        cbElemIndex =new Spinner(mContext);
+        inCB[0]=new Spinner(mContext);
         return myInstance;
     }
 
@@ -793,19 +1137,18 @@ public class cUInput {
     }
     private static void mDialogSetup2(String sTitle,  eEditType myEditType) {
 //          SETUP the dialog
-
         if (alert==null)
             alert = new AlertDialog.Builder(mContext);
         // Set an EditText view to get user inText
         alert.setView(myLayout);
         alert.setCancelable(true);
         alert.setTitle(sTitle);
-
         alert.setOnKeyListener(new DialogInterface.OnKeyListener() {
             @Override
             public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_ENTER) {//171018  only caught if NOT setImeOptions(EditorInfo.IME_ACTION_DONE);
-                    mEditAccept(false);
+                    bAccepted = true;           //Input was accepted
+                    mEditAccept1();
                     return true;
                 }
                 return false;
@@ -813,7 +1156,8 @@ public class cUInput {
         });
         alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
-                    mEditAccept(false);
+                    bAccepted = true;           //Input was accepted
+                    mEditAccept1();
                     mClose(dialog);
                 }
         });
@@ -842,62 +1186,13 @@ public class cUInput {
                 mAlertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         } catch (Exception e) {
             Log.e("log_tag", "Error " + e.toString());
+            mClose(mAlertDialog);
         }
         isDirty=false;      //set to true if some control is changed
     }
     private static void mDialogSetup1(String sTitle) {
 //          SETUP the dialog for userinput
         mDialogSetup2(sTitle, oEditType);
-        if (mAlertDialog!=null) return;
-        //Rest is obsoleted
-        if (alert==null)
-            alert = new AlertDialog.Builder(mContext);
-        // Set an EditText view to get user inText
-        alert.setView(myLayout);
-        alert.setCancelable(true);
-        alert.setTitle(sTitle);
-
-        alert.setOnKeyListener(new DialogInterface.OnKeyListener() {
-            @Override
-            public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                    dialog.dismiss();                 //dismiss the alert. Will GC clean up??
-                    mEditAccept(false);
-                    return true;
-                }
-                return false;
-            }
-        });
-        alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                mEditAccept(false);
-                mClose(dialog);
-            }
-        });
-        alert.setNegativeButton("Dismiss", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                mClose(dialog);
-
-            }
-        });
-        alert.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                mClose(dialog);
-            }
-        });
-        try {
-            if(mAlertDialog==null)
-                mAlertDialog = alert.create();
-            if ((false==mAlertDialog.isShowing())) {
-                mAlertDialog.show();
-            }
-            if (bHideKeyboard)
-                mAlertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-        } catch (Exception e) {
-            Log.e("log_tag", "Error " + e.toString());
-        }
-        isDirty=false;      //set to true if some control is changed
     }
     private static cElemViewProps    myViewData(View myEditControl) {         //Return the viewdata object of a view control
 /*!-    cleaning 170919        if (myEditControl instanceof cVertSlider2) {
@@ -911,39 +1206,87 @@ public class cUInput {
             return null;
     }
     public static void mClose(DialogInterface dialog) {
+        mInputRefresh(false);
         oEditType = eEditType.kNull;
         bDoRedraw=true;
-        dialog.dismiss();
+        if (dialog!=null)        dialog.dismiss();
         alert=null;
         mAlertDialog=null;
+
     }
 
     private static void mLinLayPrep2(){  //Prepare a layout of the UserInput
+        mClose(mAlertDialog);           //Close any existing alert dialogs
         mContext=(Context) oFocusdActivity;     //So it openes in all activities
+        if (myLayout !=null) myLayout.removeAllViews();
         myLayout = new LinearLayout(mContext);
         LinearLayout.LayoutParams parms = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         myLayout.setOrientation(LinearLayout.VERTICAL);
         myLayout.setLayoutParams(parms);
+
     }
-    public static void mUserLevel(boolean bAsk) {       //V170728
-        String[] lstStr = {
-                "User",
-                "Advanced",   //
-                "Admin" };
-        if (bAsk) {
-            oEditType = eEditType.kUserLevel;
-            mLinLayPrep2();
-            mLayoutAddDropDown1(1,"Privileges",lstStr,nAppProps[cKonst.eAppProps.kPrivileges.ordinal()]);
-            mDialogSetup1("Select user level");             //Prepare dialog layout
-        }else {       // Callback Get the fields from the editbox
-            nAppProps[cKonst.eAppProps.kPrivileges.ordinal()]= mLayout_DropDown_SelIdx(1);
-            oEditType = eEditType.kNull;
-            mPersistAllData(false);         //Remember new setting
-            return;
+    public static void mSettingsDialog() {       //171222
+        mLinLayPrepare("Settings");
+        cOptionBox ob = mOptionBox("Permissions ", "User;Advanced;Admin", cProgram3.mPrivileges(), true);
+        ob.setListener(new cOptionBox.ChangeListener() {
+            @Override
+            public void onChange(int nIndex) {
+                cProgram3.mPrivileges(nIndex);
+            }
+        });
+        Button btn = mLayoutAddCmd2("Protocol", "Load");
+        btn.setOnClickListener(v -> {
+            BaseActivity.mDispSettings();
+        });
+        if (mPrivileges()>0) {
+            CheckBox cb1 = mLayoutAddCheckbox3("Design mode", cProgram3.bDesignMode());
+            cb1.setOnClickListener(v -> {
+                cProgram3.bDesignMode(!cProgram3.bDesignMode());
+                cProgram3.bDoRedraw = true;         //Clicked action
+            });
+
+            mLayoutAddCmd2("Listen for client", "Activate").setOnClickListener(v -> {
+                mStartServerService();
+                mClose(mAlertDialog);
+            });
+            mLayoutAddCmd2("Refresh rate", "" + nRefreshRate()).setOnClickListener(v -> {
+                mInputRefresh(true);
+            });
         }
-
-
+        mDialogShow();             //Prepare dialog layout
     }
+
+    private static cOptionBox mOptionBox(String s, String s1, int i, boolean b) {
+        cOptionBox ob = new cOptionBox(mContext);
+        ob.createRadioButton(s,s1,i,b);
+        mAddLine2Layout(ob, null);
+        return ob;
+    }
+
+    public static void mUserLevel() {       //171222
+        mLinLayPrepare("Select user level");
+        cOptionBox oUserLvl = new cOptionBox(mContext);
+        oUserLvl.createRadioButton("Permissions ", "User;Advanced;Admin",cProgram3.mPrivileges(),true);
+        oUserLvl.setListener(new cOptionBox.ChangeListener() {
+            @Override
+            public void onChange(int nIndex) {
+                cProgram3.mPrivileges(nIndex);
+            }
+        });
+        mAddLine2Layout(oUserLvl, null);
+        mDialogShow();             //Prepare dialog layout
+    }
+
+    private static void mLinLayPrepare(String s) {
+        sDialogTitle=s;
+        mLinLayPrep2();
+    }
+
+    private static void mDialogShow() {
+        mDialogSetup1(sDialogTitle);
+    }
+
+
 //............................      HANDLING EDITING    ............................
     /**
      * Show the soft keyboard

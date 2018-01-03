@@ -1,6 +1,7 @@
 package it.fdg.lm;
-//folder: https://drive.google.com/drive/u/0/folders/0B5pCUAt6BabuU1I1Ri1zNzA4SG8
 //doc:  https://docs.google.com/document/d/1DZHtpABi8_ojjYB80mZkYM1BGeR8dZl6DTg3ZUgmo8A/edit
+//folder: https://drive.google.com/drive/u/0/folders/0B5pCUAt6BabuU1I1Ri1zNzA4SG8
+//rev 171222
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -10,16 +11,10 @@ import android.view.ViewGroup;
 
 import static it.fdg.lm.cAndMeth.mIsHidden;
 import static it.fdg.lm.cAndMeth.mToggleVisibility;
-import static it.fdg.lm.cFileSystem.readRawTextFile;
-import static it.fdg.lm.cFunk.mInt2Bool;
+import static it.fdg.lm.cFileSystem.mFileRead_Raw;
 import static it.fdg.lm.cGestureListener.nSignalPaneHeight;
 import static it.fdg.lm.cProgram3.mErrMsg;
-import static it.fdg.lm.cProgram3.mProtocol;
-import static it.fdg.lm.cProgram3.mRefreshRate;
-import static it.fdg.lm.cProgram3.nCurrentProtocol;
-import static it.fdg.lm.cProgram3.nUserLevel;
 import static it.fdg.lm.cProgram3.oFocusdActivity;
-import static it.fdg.lm.cProgram3.oProtocol;
 import static it.fdg.lm.cUInput.mFocusedPanel;
 import static it.fdg.lm.fMain.fPanelSignals1;
 import static it.fdg.lm.fMain.fPanelVertSliders;
@@ -31,15 +26,23 @@ public class BaseActivity extends AppCompatActivity {
     private static MenuItem _mItem;
     private static int nClickCnt1;
     private static int nMnuCount=0;
+    private static MenuItem mnuStatus;
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu){
         myMenu = menu;
         myMenu.clear();
         mDoMenu(myMenu, -1);    //Just redraw menus
+        mnuStatus=myMenu.findItem(1);
         return super.onPrepareOptionsMenu(menu);
     }
-
+    public static void mStatus( String s){
+        if (myMenu==null) return;
+        if (mnuStatus==null)
+            mnuStatus=myMenu.findItem(1);
+        if (mnuStatus!=null)
+            mnuStatus.setTitle( s);
+    }
     private boolean mDoMenu(Menu myMenu, int id) {
         mMenuCommon(myMenu,id);
         if (oFocusdActivity instanceof cSetupFile)
@@ -52,56 +55,55 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public boolean mMenuAction_dm(Menu myMenu, int nId) {
-        if (myMenu==null) return false;
+        if (myMenu == null) return false;
         if (mnuClick(nId, "Set Value", cUInput.mSelected())) {
             cUInput.mInputValue(true);
         }
-        if (mnuCheck(nId,"Show signal",!mIsHidden(fPanelSignals1))){      //Revision 170921 increase panel size
-            mToggleVisibility(fPanelSignals1);
-            cAndMeth.mLayoutWeightSet(fPanelSignals1,nSignalPaneHeight);
-        }
-        if (mnuCheck(nId,cKonst.eTexts.txtMenu_showVertical,!mIsHidden(fPanelVertSliders))){
+        myMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "______________________________________").setEnabled(false);
+        if (mnuCheck(nId, cKonst.eTexts.txtMenu_showVertical, !mIsHidden(fPanelVertSliders))) {
             mToggleVisibility(fPanelVertSliders);
-            cProgram3.bDoRedraw=true;
+            cProgram3.bDoRedraw = true;
         }
-        if (mnuClick(nId,"Next page ")){
-            cProgram3.nWatchPage=((cProgram3.nWatchPage+1)%2);
-            cProgram3.bDoRedraw=true;
+        if (mnuCheck(nId, "Show signal", !mIsHidden(fPanelSignals1))) {      //Revision 170921 increase panel size
+            mToggleVisibility(fPanelSignals1);
+            cAndMeth.mLayoutWeightSet(fPanelSignals1, nSignalPaneHeight);
         }
-        if ((0<nUserLevel())&(mFocusedPanel()!=null)){
-            if (mnuClick(nId,"Zoom panel")){
-                ViewGroup fa = (ViewGroup) mFocusedPanel();
-                float w = cAndMeth.mLayoutHeightGet(fa);
-                w=(w+1)%5;
-                cAndMeth.mLayoutWeightSet(fa,w);
-            }
-
+        if (mnuCheck(nId, "Show Data", !mIsHidden(fMain.fPanelData))) {      //Revision 170921 increase panel size
+            mToggleVisibility(fMain.fPanelData);
         }
-
-        if (mnuClick(nId,"Mode settings")){
+        if (mnuClick(nId, "Show Device Mode")) {
             mBitFields_Show();
         }
-        if (cProgram3.nUserLevel()>0) {            //170728    Advanced permissions
-            if (mnuClick(nId, "Control:"+ cUInput.oCtrlID(), cUInput.mSelected())) {
+
+        if (mnuClick(nId, "Next page ")) {
+            cProgram3.nWatchPage = ((cProgram3.nWatchPage + 1) % 2);
+            cProgram3.bDoRedraw = true;
+        }
+        if ((0 < cProgram3.mPrivileges()) & (mFocusedPanel() != null)) {
+            if (mnuClick(nId, "Zoom panel")) {
+                ViewGroup fa = (ViewGroup) mFocusedPanel();
+                float w = cAndMeth.mLayoutHeightGet(fa);
+                w = (w + 1) % 5;
+                cAndMeth.mLayoutWeightSet(fa, w);
+            }
+
+        }
+
+
+        if (cProgram3.mPrivileges() > 0) {            //170728    Advanced permissions
+            if (mnuClick(nId, "Control:" + cUInput.oCtrlID(), cUInput.mSelected())) {
                 cUInput.mInputViewSettings1(true); //Associate element with widget
-            }
-            if (nUserLevel()>1) //Admin only
-            if (mnuCheck(nId, "Design mode", mInt2Bool(cProgram3.mAppProps(cKonst.eAppProps.kShowHidden)))) {
-                cProgram3.mAppPropsToggle(cKonst.eAppProps.kShowHidden);   cProgram3.bDoRedraw=true;         //Clicked action
-            }
-            if (mnuClick(nId, "Settings")) {
-                mDispSettings();
-            }
-            BaseActivity.menuFindBTDevice(nId);
-            if (nUserLevel()>1) //Admin only    !- testing only
-            if (mnuClick(nId,"Listen for client"))
-            {
-                cProgram3.oProtocol[0].oSerial.mStartServerService();
             }
         }
         myMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "______________________________________").setEnabled(false);
+        if (mnuClick(nId, "Settings")) {
+            cUInput.mSettingsDialog();
+        }
+        if (cProgram3.mPrivileges() > 0){
+             menuDevices(nId);
+        }
         if (mnuClick(nId,"User permissions"))          //R170725
-            cUInput.mUserLevel(true);
+            cUInput.mUserLevel();
         if (mnuClick(nId,"About & Help"))          //R170725
         {
             mShowAbout();
@@ -110,7 +112,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     private void mShowAbout() {      //Open a browser with the google help document
-        String s = readRawTextFile(R.raw.lm2_help_html);
+        String s = mFileRead_Raw("lm2_help");
         cUInput.mShowHtml("Libermano App",s);
     }
 
@@ -128,16 +130,17 @@ public class BaseActivity extends AppCompatActivity {
     static void mMenuCommon(Menu myMenu, int nId) {        //Negative index will just update, index of which menu has been clicked
         nMnuCount=0; //   Reset menucounter
         //NOw the Connection menu
-        if (mnuMain(nId, mGetConnectMenuText())) {    //Make a connection, 3 clicks to
-            cProgram3.mCommunicate(true);
-            mProtocol().mProtResetReq();
+        if (mnuMain(nId, "Status menu1")) {    //Make a connection, 3 clicks to
+            cUInput.mInputRefresh(true);
         }
-        mRefreshRate(500);
+/*        if (mnuMain(nId, "Status menu2")) {    //Make a connection, 3 clicks to
+            cProgram3.mCommunicate(true);
+        }*/
     }
 
     private static String mGetConnectMenuText() {
-            String title = oProtocol[nCurrentProtocol].mDeviceNameGet();
-            return title;
+
+        return "Status";
         }       //Returns a text to display on the menu
 
 
@@ -151,7 +154,7 @@ public class BaseActivity extends AppCompatActivity {
 
         return (nId==nMnuCount);
     }
-    private static boolean mnuMain(int nId, String s) {
+    public static boolean mnuMain(int nId, String s) {
         mnuClick(nId,s);
         if (nId<0) {
             myMenu.findItem(nMnuCount).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
@@ -182,10 +185,10 @@ public class BaseActivity extends AppCompatActivity {
 
 
 
-    public static boolean menuFindBTDevice(int nId) {
-        if (mnuClick(nId,"Find BT device"))          //R170725
+    public static boolean menuDevices(int nId) {
+        if (mnuClick(nId,"Devices"))          //R170725
         {
-            cProgram3.mProtocol().mBT_PickDevice1();
+            cUInput.mInputSelectDevice(true);
             return true;
         }
         return false;

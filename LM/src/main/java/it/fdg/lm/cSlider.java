@@ -39,7 +39,7 @@ public class cSlider {
     //..................................Getters and setters.................................
     private cProtElem oElement(int i) {             //170914    Safe return of the element object
         if (oElemViewProps[i] == null) return null;
-        return oElemViewProps[i].oGetElem();
+        return oElemViewProps[i].myProtElem1();
     }       //Return the i'th element
 
     public cSlider(Context context) {
@@ -64,11 +64,11 @@ public class cSlider {
         return oElemViewProps[nCurrentViewPropsIdx];
     }
     public void mApplySameScale(){      //Apply the same scale to all
-        if (oElemViewProps[oSliderView.nActiveIdx].oGetElem()==null ) return;
-        float[] r = oElemViewProps[oSliderView.nActiveIdx].oGetElem().nDisplayRange;
+        if (oElemViewProps[oSliderView.nActiveIdx].myProtElem1()==null ) return;
+        float[] r = oElemViewProps[oSliderView.nActiveIdx].myProtElem1().nDisplayRange;
         for (int i=0;i<oElemViewProps.length;i++){
-            if (oElemViewProps[i].oGetElem()!=null)
-            oElemViewProps[i].oGetElem().nDisplayRange=r;
+            if (oElemViewProps[i].myProtElem1()!=null)
+            oElemViewProps[i].myProtElem1().nDisplayRange=r;
         }
     }
 
@@ -105,7 +105,7 @@ public class cSlider {
         mInitElements(sElemViewPropsIds);        //Find view properties object by id 170913
         oSliderView.bDesignMode = bDesignMode();
         for (int i = 0; i < oElemViewProps.length; i++) {
-            if (oElemViewProps[i].oGetElem() != null) {
+            if (oElemViewProps[i].myProtElem1() != null) {
                 oSliderView.mSetHandleColor(i, oElemViewProps[i].mForeColor());
                 oSliderView.mSetIntervalColor(i, oElemViewProps[i].mBackColor());
                 oSliderView.mSetDescription(i, oElemViewProps[i].mAlias());
@@ -128,7 +128,7 @@ public class cSlider {
         }
         for (int i = 0; i < oElemViewProps.length; i++) {
             if (oElemViewProps[i] == null) return;       //No view properties
-            if (oElemViewProps[i].oGetElem() != null) {
+            if (oElemViewProps[i].myProtElem1() != null) {
                 float v = oElemViewProps[i].mDevice2WxValue(oSliderView.nScaleMax);      //170910    Get value in pixels
 
                 oSliderView.mValueInPx(i, v);            //170910 Set the slider value
@@ -140,14 +140,12 @@ public class cSlider {
     }       //Refresh the control
 
     private void mCtlValueWrite2Device() {
-        float[] v = oSliderView.mGetAllValues();
-        for (int i = 0; i < oElemViewProps.length; i++) {
-            if (oElemViewProps[i] != null)
-                if (oElemViewProps[i].bVisible())
-                    if (oElemViewProps[i].bEnabled())      //No view properties
-                        oElemViewProps[i].mWxValue2Device(v[i], oSliderView.nScaleMax);
-        }
-    }           ////Write control data to device
-
+        int i = nCurrentViewPropsIdx;
+        if (mGetCurrentElementView().bVisible())
+            if (mGetCurrentElementView().bEnabled()) {
+                float n = oSliderView.nActiveValue();
+                oElemViewProps[i].mWxValue2Device(n, oSliderView.nScaleMax);
+            }
+    }
 
 }

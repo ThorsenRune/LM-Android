@@ -44,7 +44,7 @@ public class cBitField extends BaseActivity {
 
     @Override
     public void onResume() {
-        cGestureListener.mySetParent(myDataView);
+
         super.onResume();
         cProgram3.oFocusdActivity=this;
      }
@@ -92,7 +92,7 @@ public class cBitField extends BaseActivity {
     }
 
     private void mEditBitDesc(int bitnr) {
-        cUInput.setFocus(mElemViewProps());
+        cUInput.mSetFocus(mElemViewProps());
         cUInput.mEditBitDesc(true,bitnr );
     }
 
@@ -172,7 +172,7 @@ public class cBitField extends BaseActivity {
 
     private cProtElem myProtElem() {
         if (mElemViewProps()==null) return null;
-        return mElemViewProps().oGetElem();
+        return mElemViewProps().myProtElem1();
     }
 
 
@@ -180,16 +180,10 @@ public class cBitField extends BaseActivity {
         if (mnuClick(nId, "Set Value", cUInput.mSelected())) {
             cUInput.mInputValue(true);
         }
-        if (mnuClick(nId,"Mode settings",false)){
 
-        }
         if (bAdmin()) {            ;       //170728    Advanced permissions
             if (mnuClick(nId, "Control:"+ cUInput.oCtrlID(), cUInput.mSelected())) {
                 cUInput.mInputViewSettings1(true); //Associate element with widget
-            }
-
-            if (mnuClick(nId, "Settings file")) {
-                mDispSettings();
             }
         }
         myMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "______________________________________").setEnabled(false);

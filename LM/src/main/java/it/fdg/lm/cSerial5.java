@@ -86,14 +86,15 @@ public class cSerial5 {
 
     //BT Actions
     //R170315	Manage serial communication using the FIFO buffers
-    public synchronized byte[] mProcessSerial(){               //170927 Returns array of data received from serial RX they are also put on receive buffer
-        for (int loop=0;loop<200;loop++){
+    public synchronized void mProcessSerial(){               //170927 Returns array of data received from serial RX they are also put on receive buffer
+        for (int loop=0;loop<oTXFIFO.nBytesAvail;loop++){
             if (oTXFIFO.mCanPop(1)==false) break;                //Send FIFO data to serial output stream
             int byB=oTXFIFO.mFIFOpop();
             mWriteByte(oOutput, (byte) byB);
+
         }
         byte[] aBytes = mReadBytes(oInput);
-        if (aBytes==null) return null;
+        if (aBytes==null) return ;
         for (int i=0;i<aBytes.length;i++){       //Loop through buffer and transfer from input stream to FIFO buffer    //+170601 revised from while loop to avoid endless loop
             if (oRXFIFO.mCanPush()){
                 oRXFIFO.mFIFOpush(aBytes[i]);     //Put the data on the fifo
@@ -104,7 +105,6 @@ public class cSerial5 {
                 nDataRcvd=-1;
             }
         }
-        return aBytes;
     }       //This is the worker method
     //State register
     private void mStateSet(cKonst.eSerial nNewState) {
@@ -148,7 +148,7 @@ public class cSerial5 {
 
 
     public void mBTClose1() {       //If this application opened the port then it will also politely close the door when it leaves
-        mDevice_Disconnect();
+        mDisconnect();
         if (oBTadapter != null) {
             if (oBTadapter.isEnabled()) {
                 if (isOpenedByMe)       //170905 only if this application opened the bluetooth
@@ -172,9 +172,11 @@ public class cSerial5 {
         {
             try {       //Maybe the steam was closed by receiver
                 oOutput.write(out);
+                mSleep(1);      //Don't send too fast
             } catch (IOException e) {
+                mErrMsg("Connection lost " + oDevice.getName());
                 mStateSet( cKonst.eSerial.kBT_BrokenConnection);
-                 mDevice_Disconnect();
+                 mDisconnect();
             }
         }
     }  //Write data to client safely
@@ -192,7 +194,7 @@ public class cSerial5 {
         return buffer;
     }
 
-    public int mReadByte2(InputStream oI) {        //To refactor into cProtocol 170929 // TODO: 29/09/2017
+    public int mReadByte2(InputStream oI) {        //To refactor into cProtocol 170929
         int nAvail=0;
         try {
             nAvail = oI.available();
@@ -234,7 +236,7 @@ public class cSerial5 {
 
 
     //Chain: mAsyncProcessing_Work->mBT_PickDevice..wait for user ...->receiver->onReceive
-    public boolean mBT_PickDevice1(){
+    public boolean mBT_PickDevice2(){   //Will change sRemoteDeviceName
         if (oBTadapter==null) return false;
         mStateSet(cKonst.eSerial.kBT_DevicePickerActive);
         oBTadapter.startDiscovery();
@@ -246,7 +248,7 @@ public class cSerial5 {
         return true;
     }        //Find new devices  (discover)
 
-    protected boolean mStartServerService() {//170926    Start listening for a client to relay to (170926 !+todo make the call from connection event
+    protected boolean mStartServerService() {//170926    Start listening for a client to relay to (170926
         if (oBTServer == null) {
             oBTServer = new cRelay2Client();//170922
         }
@@ -260,16 +262,9 @@ public class cSerial5 {
 
 
 /*---------------------------------------------------------------------------------------*/
-public boolean mConnection() {        //Find and mConnect to the bluetooth
-//      Connection to the device given by name  Chain:mAsyncProcessing_Work->mConnect->
-        if (mIsState(kBT_Connected1))                //Returns true only when connected
-            return true;
-        if (mIsState(kBT_InvalidDevice1)) {              //No valid device is active
-            mBT_PickDevice1();
-            return false;
-        }
-        if (mIsState(kBT_DevicePickerActive))                //No valid device is active
-            return false;
+public boolean mConnect(String s) {        //Find and mConnect to the bluetooth
+        sDeviceName=s;
+        mStateSet(kBT_ConnectReq1);
         if (mBTOpen1()==false) {            //If BT cannot be opened
             mStateSet(kBT_InvalidBT1);
             mErrMsg("No bluetooth port available");
@@ -280,11 +275,12 @@ public boolean mConnection() {        //Find and mConnect to the bluetooth
             if (oInput!=null)
                 mStateSet(kBT_Connected1);
             else
+                mStateSet(kBT_InvalidDevice1);
                 return false;
         }
         if (mIsState(kBT_ConnectReq1))               //Get the device object
             oDevice=mBTDeviceByName(sDeviceName);
-        if (oDevice==null) {                        //Device not found,
+        else if (oDevice==null) {                        //Device not found,
             oDevice=mBTDeviceByName(sDeviceName);
             if (oDevice==null){
                 mStateSet(kBT_InvalidDevice1);
@@ -295,7 +291,7 @@ public boolean mConnection() {        //Find and mConnect to the bluetooth
         //set by mConnectDeviceWithName, mRequestConnection
         if (mIsState(kBT_ConnectReq1)) {     //Try to connect first time
             if (mConnect2Device1(oDevice)==false)       //mConnect sets      mStateSet(kBT_DeviceConnected);
-                mSleep(1000);
+                mSleep(10);
         } else if (mIsState(cKonst.eSerial.kBT_BrokenConnection)) {     //Try to reconnect
             mSleep(2000);
             bDoRedraw=true;
@@ -309,13 +305,13 @@ public boolean mConnection() {        //Find and mConnect to the bluetooth
         return false;
     }
 
-    private void mDevice_Disconnect() {       //Disconnect connection if there was one
+    public void mDisconnect() {       //Disconnect connection if there was one
         try {
             if (oOutput!=null){
                 oOutput.close();
                 oOutput=null;}
             if (oBTServer!=null)
-                oBTServer.mCloseService2();
+                oBTServer.mCloseService2(); //Disconnect a relayed device
             if (oInput!=null){
                 oInput.close();
                 oInput=null;}
@@ -338,18 +334,17 @@ public boolean mConnection() {        //Find and mConnect to the bluetooth
             Set<BluetoothDevice> pairedDevices = oBTadapter.getBondedDevices();
             if (pairedDevices.size() > 0) {
                 for (BluetoothDevice device : pairedDevices) {
-                    if (sNewDeviceName.equalsIgnoreCase(device.getName())) {
+                   if (cFunk.mTextLike(sNewDeviceName,device.getName())){
                         oDevice=device;
                         return device;
                     }
                 }
             }
         } else {
-            if (sNewDeviceName.equalsIgnoreCase(oDevice.getName())) {
+            if (cFunk.mTextLike(sNewDeviceName,oDevice.getName())) {
                 return oDevice;
             }
         }
-        mDevice_Disconnect();
         return null;
     }
 
@@ -361,21 +356,23 @@ public boolean mConnection() {        //Find and mConnect to the bluetooth
 
     private boolean mConnect2Device1(BluetoothDevice oDevice1){
         // connect the BT and set the  _DeviceName
-         mDevice_Disconnect();
         oDevice=oDevice1;
         mStateSet(kBT_Connecting);                 //Connecting to a server
         if (mIsAndroidDevice(oDevice1)) {
             if (mConnect2Device_Sub(UUID_ANDROID_INSECURE, oDevice1)) {
-                mMsgLog("ANDROID is connecting170922");
+                mStateSet(kBT_Connected1);
+                mMsgLog("ANDROID Connected: " +oDevice1.getName());
                 return true;
             }
         } else if (mIsClassic(oDevice1)) {          //  Classic bluetoot device
             if ( mConnect2Device_Sub(UUID_LMDEVICE_INSECURE, oDevice1)) {
-                mMsgLog("Classic bluetooth 170922");
+                mStateSet(kBT_Connected1);
+                mMsgLog("Classic bluetooth Connected: " +oDevice1.getName() );
                 return true;
             }
         }
     mMsgDebug("Could not connect");
+        mBTClose1();
     return false;
 } //mConnect2Device   Connect to either device or an android as a client
 
@@ -390,20 +387,21 @@ public boolean mConnection() {        //Find and mConnect to the bluetooth
             try {       //Make a socket for the connection 170929
                 if (oSocket!=null) {oSocket.close();mSleep(1000);}
                 oSocket = oDevice.createInsecureRfcommSocketToServiceRecord(uuidLmdeviceInsecure);
-                mSleep(1000);
+                mSleep(300);
             } catch (IOException e) {
                 mErrMsg("Socket Type:insecure " + "listen() failed" + e.toString());
             }
             if (oSocket==null) return false;
             try {
-                //mMsgLog("Connecting to " + oDevice.getName() + " Attempt#: "+ nAttempts);
+                mMessage("Searching " + oDevice.getName() );
                 oSocket.connect();
                 bResult = mConnect_StreamsInit(oSocket);
                 if (bResult) {
-                    mMsgLog("Connection success");
+                    mMessage(oDevice.getName()+" Connected");
                     return true;                                         //Exit point
                 }
             } catch (IOException e) {
+                mMessage(oDevice.getName()+" Timeout");
                 mStateSet(cKonst.eSerial.kBT_TimeOut);
             }
         mStateSet(cKonst.eSerial.kBT_TimeOut);
@@ -525,7 +523,7 @@ public boolean mConnection() {        //Find and mConnect to the bluetooth
                             mRequestConnection();
                             break;
                         case BluetoothAdapter.STATE_TURNING_ON:
-                            //mMsgDebug("mBroadcastReceiver1: Bluetooth is TURNING ON");
+                            mMsgLog("mBroadcastReceiver1: Bluetooth is TURNING ON");
                             mStateSet(kBT_ConnectReq1);
                             break;
                     }
@@ -553,7 +551,7 @@ public boolean mConnection() {        //Find and mConnect to the bluetooth
     private boolean mIsAnotherDevice(BluetoothDevice oNewDevice) {
         if (oNewDevice==null)
             return false;
-        else if (oBTadapter.getName().equalsIgnoreCase(oNewDevice.getName())) { // MYSELF
+        else if (cFunk.mTextLike(oBTadapter.getName(),oNewDevice.getName())) { // MYSELF
             return false;
         }
         return true;
@@ -563,6 +561,7 @@ public boolean mConnection() {        //Find and mConnect to the bluetooth
         if (oDevice==null) return;
         if (mAsClient(sRemoteDeviceName))  {
             if (mIsState(kBT_Connected1)){
+                mMsgDebug( sRemoteDeviceName + " Disconnected");
                 mStateSet(cKonst.eSerial.kBT_BrokenConnection);
             } else {
                 mMsgDebug( sRemoteDeviceName + " Disconnected");
@@ -617,19 +616,15 @@ public boolean mConnection() {        //Find and mConnect to the bluetooth
     }
 
     public void mConnectNamedDevice(String s) {
-        sDeviceName=s;
-//        mRequestConnection();
-        mStateSet(kBT_ConnectReq1);
+        oParent.mDeviceNameSet(s);
     }
 
     public void mRequestConnection() {
         mStateSet(kBT_ConnectReq1);
     }
 
-    public void mConnectTo(String s) {      //Set the device name
-        mDevice_Disconnect();
-        mBTDeviceByName(s);
-        mRequestConnection();
+    public boolean isConnected() {
+        return mIsState(kBT_Connected1);
     }
 }
 

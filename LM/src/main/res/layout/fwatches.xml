@@ -1,0 +1,26 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/backborder"
+    android:layout_height="wrap_content">
+        <!-- Watch panel having  ID: WD#            -->
+    >
+        <it.fdg.lm.cData_View
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/backborder"
+            android:id="@+id/idWD1"
+            />
+        <it.fdg.lm.cData_View
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/backborder"
+            android:id="@+id/idWD2"
+            />
+        <it.fdg.lm.cData_View
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/backborder"
+            android:id="@+id/idWD3"
+            />
+</LinearLayout>

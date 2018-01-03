@@ -138,11 +138,11 @@ import static java.lang.Math.abs;
         public boolean mListen(View myParent1, MotionEvent event) {     //170824 Supposed to replace mySetParent and gestureDetceoor on touch
             myParent = myParent1;
             if (myParent1 instanceof cSliderView)
-                cUInput.setFocus(myParent);
+                cUInput.mSetFocus(myParent);
             else if (myParent1 instanceof  cSignalView2) {
-                cUInput.setFocus(myParent);
+                cUInput.mSetFocus(myParent);
             } else if (myParent1 instanceof  cData_View)
-                cUInput.setFocus(myParent);
+                cUInput.mSetFocus(myParent);
             //else             mErrMsg("Call not implemented");
 
             int a = event.getAction();
@@ -152,24 +152,11 @@ import static java.lang.Math.abs;
             retval = oGestureDetector.onTouchEvent(event)|| handled;
             if (a==MotionEvent.ACTION_UP)
                 if (!bScaleBegin){
-
-            } else
-                retval= true;
+                } else
+                    retval= true;
             return retval;
         }
 
-        public static void mySetParent(Object newParent) {     //Replace by listen above !!todo
-         //   if (myParent == newParent) return;      //MInimize recalls
-            if (newParent instanceof View)
-                myParent =(View) newParent;
-            if (newParent instanceof  cSignalView2)
-                cUInput.setFocus(myParent);
-            else if (newParent instanceof  cData_View)
-                cUInput.setFocus(myParent);
-            else if (newParent instanceof cSlider)
-                cUInput.setFocus(newParent);
-            //else             mErrMsg("Call not implemented");
-        }
 
         public boolean bLongPress() {           //Will clear the flag once tested
             boolean b=bLongPress;bLongPress=false;

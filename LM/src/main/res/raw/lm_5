@@ -1,0 +1,234 @@
+//  Google Docs: https://docs.google.com/document/d/1ND8MsqkXnXizi4cFFNcPxWSYxGXKiXosxrkFZ2ebnlA/edit
+
+App.Description	=>	[LM Settings file: LM_5.txt  Date: 18-Set-2017 12:40 , Revision 170904];
+
+
+
+Devices	=>	[LM-BT05];      //P1,P2 etc
+
+P1.Elements	=>	[nMode.all_flags, aRMSfilt, xData, yData, xData1, yData1, IMin, aIAmp, Offset, Gain, IMax, HVValue, nBlankInterval, bErrFlags.all_flags, nTimerInMs, StimCountEx, aRMSshift, aMLev, IMaxLimit, StimNegDur];
+
+//-----------------WIDGET SETTINGS
+Widgets	=>	[B0, WV0A0, WV0B0, WV0C0, WV6A0, WV6B0,
+            WV7A0, WS1_0, WS1_1, WH0A1, WH0B1, WH0C1, WH0D1 ];
+//                  Name of element, index in elementvector, properties b0:visibility,b1:editable,b2:write on start
+WV0A0.Name	=>	[P1,IMin, 0, 3];
+WV0B0.Name	=>	[P1,aIAmp, 0, 1];
+WV0C0.Name	=>	[P1,IMax, 0, 3];
+
+WV6A0.Name	=>	[P1,Offset, 0, 3];
+WV6B0.Name	=>	[P1,aRMSfilt, 0, 1];
+WV7A0.Name	=>	[P1,Gain, 0, 3];
+//Horizontal sliders
+
+WH0A1.Name	=>	[P1,nBlankInterval, 0, 3];
+WH0B1.Name	=>	[P1,nBlankInterval, 1, 3];
+WH0C1.Name	=>	[P1,nBlankInterval, 2, 3];
+WH0D1.Name	=>	[P1,nBlankInterval, 3, 3];
+
+//Signals   name_page
+WS1_0.Name	=>	[P1,xData, 0, 1];
+WS1_1.Name	=>	[P1,yData, 0, 1];
+
+B0.Name	=>	[P1,nMode.all_flags, 0, 1];
+
+P1.Gain.Alias	=>	[Guardagno A];
+P1.Gain.Color1	=>	[3, 3];          //Green
+P1.Gain.Color2	=>	[3, 3];
+P1.Gain.Data	=>	[10, 10];
+P1.Gain.Descr	=>	[Rapporto EMG - Stimolazione];
+P1.Gain.DispRange	=>	[0.0, 50.0];
+P1.Gain.Factor	=>	[1.0];
+P1.Gain.Offset	=>	[0];
+P1.Gain.Properties	=>	[1, 0, 0, 0, 0, 0, 0, 0];
+P1.Gain.Unit	=>	[x];
+P1.HVValue.Alias	=>	[];
+P1.HVValue.Color2	=>	[0, 0, 0, 0];
+P1.HVValue.Color1	=>	[0, 0, 0, 0];
+P1.HVValue.Data	=>	[0];
+P1.HVValue.Descr	=>	[];
+P1.HVValue.DispRange	=>	[0.0, 50.0];
+P1.HVValue.Factor	=>	[1.0];
+P1.HVValue.Offset	=>	[0];
+P1.HVValue.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.HVValue.Unit	=>	[];
+
+P1.IMax.Alias	=>	[Max Stim];
+P1.IMax.Color1	=>	[9, 9];
+P1.IMax.Color2	=>	[0,0];
+P1.IMax.Data	=>	[349, 0];
+P1.IMax.Descr	=>	[Stimolazione massimale];
+P1.IMax.DispRange	=>	[0.0, 50.0];
+P1.IMax.Factor	=>	[10.0];
+P1.IMax.Offset	=>	[0];
+P1.IMax.Properties	=>	[1, 1];
+P1.IMax.Unit	=>	[mA];
+P1.IMaxLimit.Alias	=>	[];
+P1.IMaxLimit.Color2	=>	[0, 0, 0, 0];
+P1.IMaxLimit.Color1	=>	[0, 0];
+P1.IMaxLimit.Data	=>	[0];
+P1.IMaxLimit.Descr	=>	[];
+P1.IMaxLimit.DispRange	=>	[0.0, 50.0];
+P1.IMaxLimit.Factor	=>	[1.0];
+P1.IMaxLimit.Offset	=>	[0];
+P1.IMaxLimit.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.IMaxLimit.Unit	=>	[];
+P1.IMin.Alias	=>	[Min Stim];;P1.IMin.Descr	=>	[Livello minimo dello stimolozione];
+P1.IMin.Color1	=>	[9, 9];; P1.IMin.Color2	=>	[9, 9];;
+P1.IMin.Data	    =>	[66, 0];;P1.IMin.Factor	=>	[10.0];;
+P1.IMin.DispRange	=>	[0.0, 50.0];;P1.IMin.Offset	=>	[0];;
+P1.IMin.Properties	=>	[1, 1];;P1.IMin.Unit	=>	[mA];;
+P1.Offset.Alias	=>	[Threshold for EMG];
+P1.Offset.Color2	=>	[0, 0, 0, 0];
+P1.Offset.Color1	=>	[7, 20, 20];
+P1.Offset.Data	=>	[100000, 100000];
+P1.Offset.Descr	=>	[EMG level where stimulation will start];
+P1.Offset.DispRange	=>	[0.0, 200.0];
+P1.Offset.Factor	=>	[2093];          //https://docs.google.com/document/d/11nCREUKJt2hxSaZ5-icjiOPtkRpfNy2ZHuoLSSgvyMk/edit#bookmark=id.cgru2we3ljmn
+P1.Offset.Offset	=>	[0];
+P1.Offset.Properties	=>	[1, 1, 0, 0, 0, 0, 0, 0];
+P1.Offset.Unit	=>	[uV];
+P1.StimCountEx.Alias	=>	[];
+P1.StimCountEx.Color2	=>	[0, 0, 0, 0];
+P1.StimCountEx.Color1	=>	[0, 0];
+P1.StimCountEx.Data	=>	[0, 0, 0, 0];
+P1.StimCountEx.Descr	=>	[];
+P1.StimCountEx.DispRange	=>	[0.0, 50.0];
+P1.StimCountEx.Factor	=>	[1.0];
+P1.StimCountEx.Offset	=>	[0];
+P1.StimCountEx.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.StimCountEx.Unit	=>	[];
+P1.StimNegDur.Alias	=>	[];
+P1.StimNegDur.Color2	=>	[0, 0, 0, 0];
+P1.StimNegDur.Color1	=>	[0, 0];
+P1.StimNegDur.Data	=>	[0, 0];
+P1.StimNegDur.Descr	=>	[];
+P1.StimNegDur.DispRange	=>	[0.0, 50.0];
+P1.StimNegDur.Factor	=>	[1.0];
+P1.StimNegDur.Offset	=>	[0];
+P1.StimNegDur.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.StimNegDur.Unit	=>	[];
+P1.aIAmp.Alias	=>	[Stim attuale];
+P1.aIAmp.Color1	=>	[9,9];          //Red colors
+P1.aIAmp.Color2	=>	[9,9];
+P1.aIAmp.Data	=>	[220, 0];
+P1.aIAmp.Descr	=>	[Livello attuale dello stimolozione];
+P1.aIAmp.DispRange	=>	[0.0, 50.0];
+P1.aIAmp.Factor	=>	[10.0];
+P1.aIAmp.Offset	=>	[0];
+P1.aIAmp.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.aIAmp.Unit	=>	[mA];
+P1.aMLev.Alias	=>	[];
+P1.aMLev.Color2	=>	[0, 0, 0, 0];
+P1.aMLev.Color1	=>	[0, 0];
+P1.aMLev.Data	=>	[0, 0];
+P1.aMLev.Descr	=>	[];
+P1.aMLev.DispRange	=>	[0.0, 50.0];
+P1.aMLev.Factor	=>	[1.0];
+P1.aMLev.Offset	=>	[0];
+P1.aMLev.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.aMLev.Unit	=>	[];
+P1.aRMSfilt.Alias	=>	[MES RMS];
+P1.aRMSfilt.Color1	=>	[2,2];
+P1.aRMSfilt.Color2	=>	[16,16];
+P1.aRMSfilt.Data	=>	[200106672, 45302];
+P1.aRMSfilt.Descr	=>	[Energy of the myoelectric signal];
+P1.aRMSfilt.DispRange	=>	[0.0, 200.0];
+P1.aRMSfilt.Factor	=>	[268000.0];
+P1.aRMSfilt.Offset	=>	[0];
+P1.aRMSfilt.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.aRMSfilt.Unit	=>	[uV];
+P1.aRMSshift.Alias	=>	[Shifted RMS];
+P1.aRMSshift.Color2	=>	[0, 0, 0, 0];
+P1.aRMSshift.Color1	=>	[0, 0];
+P1.aRMSshift.Data	=>	[0, 0];
+P1.aRMSshift.Descr	=>	[];
+P1.aRMSshift.DispRange	=>	[0.0, 50.0];
+P1.aRMSshift.Factor	=>	[2.68E8];
+P1.aRMSshift.Offset	=>	[0];
+P1.aRMSshift.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.aRMSshift.Unit	=>	[];
+P1.bErrFlags.all_flags.Alias	=>	[];
+P1.bErrFlags.all_flags.Color2	=>	[0, 0, 0, 0];
+P1.bErrFlags.all_flags.Color1	=>	[0, 0];
+P1.bErrFlags.all_flags.Data	=>	[0];
+P1.bErrFlags.all_flags.Descr	=>	[];
+P1.bErrFlags.all_flags.DispRange	=>	[0.0, 50.0];
+P1.bErrFlags.all_flags.Factor	=>	[1.0];
+P1.bErrFlags.all_flags.Offset	=>	[0];
+P1.bErrFlags.all_flags.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.bErrFlags.all_flags.Unit	=>	[];
+P1.nBlankInterval.Alias	=>	[Blanking1 start, Blanking1 stop, Blank2 Start, Blank2 end];
+P1.nBlankInterval.Color2	=>	[0, 11, 0, 11];
+P1.nBlankInterval.Color1	=>	[9, 11, 5, 11, 23, 0, 6, 7];
+P1.nBlankInterval.Data	=>	[14, 61, 81, 96];
+P1.nBlankInterval.Descr	=>	[Interval of blanking];
+P1.nBlankInterval.DispRange	=>	[0.0, 110.0];
+P1.nBlankInterval.Factor	=>	[1.0];
+P1.nBlankInterval.Offset	=>	[0];
+P1.nBlankInterval.Properties	=>	[15, 0];
+P1.nBlankInterval.Unit	=>	[samples];
+P1.nMode.all_flags.Alias	=>	[Mode];
+P1.nMode.all_flags.BitDisp	=>	[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+P1.nMode.all_flags.BitNames	=>	[ENPLW-Enable piecewise linear function, ENCHRGVCCS-Enable CHRGVCCS, ENSWITCHES- Enable MUX Switches, ENHVPS- Enable High Voltage Power Supply, ENFR-Enable INA Fast Restore, ENPLSCTRL1-Enable PLS CTRL on channel 1, ENPLSCTRL2-Enable PLS CTRL on channel 2, VPPCHARGE-Enable VPPCHARGE, PWLDIFFRMS-Increase or decrease aIAmp depending ALSO on RMSnew-RMSold, PWLBLANKING- Blanking enable (first 21 samples), ENHPFILTER-First HP filter enable, ONECHSUM- Sum the two input channels to calculated  one out channel, SAVECOUNT- Save number stimulation impulses StimCount4, RESETCOUNT- Reset the counter for stimulation impulses];
+P1.nMode.all_flags.Color2	=>	[0, 0, 0, 0];
+P1.nMode.all_flags.Color1	=>	[0, 0];
+P1.nMode.all_flags.Data	=>	[64];
+P1.nMode.all_flags.Descr	=>	[Modalità di processing];
+P1.nMode.all_flags.DispRange	=>	[0.0, 50.0];
+P1.nMode.all_flags.Factor	=>	[1.0];
+P1.nMode.all_flags.Offset	=>	[0];
+P1.nMode.all_flags.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.nMode.all_flags.Unit	=>	[];
+P1.nTimerInMs.Alias	=>	[];
+P1.nTimerInMs.Color2	=>	[0, 0, 0, 0];
+P1.nTimerInMs.Color1	=>	[0, 0];
+P1.nTimerInMs.Data	=>	[0, 0, 0];
+P1.nTimerInMs.Descr	=>	[Internal timer];
+P1.nTimerInMs.DispRange	=>	[0.0, 50.0];
+P1.nTimerInMs.Factor	=>	[1.0];
+P1.nTimerInMs.Offset	=>	[0];
+P1.nTimerInMs.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.nTimerInMs.Unit	=>	[];
+P1.xData.Alias	=>	[EMG input];
+P1.xData.Color1	=>	[5, 5];
+P1.xData.Color2	=>	[0, 0];
+P1.xData.Data	=>	[-50000, 39325000, -3275000, -52000000, -35825000, -3625000, 20850000, 52275000, 64725000, 62400000, 57900000, 55275000, 51825000, 46750000, 40025000, 25475000, 6625000, -6700000, -10525000, -9050000, -8325000, -9825000, -13050000, -14175000, -15200000, -18175000, -20725000, -24725000, -29600000, -28950000, -26650000, -25725000, -23800000, -21000000, -20150000, -22425000, -31675000, -41850000, -42475000, -35200000, -23025000, -8350000, 5950000, 19550000, 29575000, 35775000, 38325000, 40750000, 48350000, 53700000, 54275000, 53400000, 49350000, 43850000, 33700000, 16100000, -775000, -9550000, -9625000, -8150000, -8250000, -11250000, -13475000, -13325000, -15700000, -17925000, -21450000, -27475000, -29375000, -27950000, -26475000, -25150000, -23275000, -20925000, -21050000, -26475000, -37525000, -43450000, -39250000, -29650000, -15875000, -1350000, 12550000, 25200000, 33100000, 37075000, 38850000, 43825000, 51000000, 53750000, 53975000, 51675000, 47375000, 40975000, 26875000, 7825000, -5975000, -9950000, -8625000, -7825000, -9200000, -12925000, -13750000, -14200000, -17650000, -20800000, -25100000, -28725000, -28125000, -26700000];
+P1.xData.Descr	=>	[Raw EMG Signal];
+P1.xData.DispRange	=>	[-1.0, 1.0];
+P1.xData.Factor	=>	[2.68E8];
+P1.xData.Offset	=>	[0];
+P1.xData.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.xData.Unit	=>	[mV];
+P1.xData1.Alias	=>	[];
+P1.xData1.Color2	=>	[0, 0, 0, 0];
+P1.xData1.Color1	=>	[0, 11];
+P1.xData1.Data	=>	[0];
+P1.xData1.Descr	=>	[];
+P1.xData1.DispRange	=>	[0.0, 50.0];
+P1.xData1.Factor	=>	[1.0];
+P1.xData1.Offset	=>	[0];
+P1.xData1.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.xData1.Unit	=>	[];
+P1.yData.Alias	=>	[Filtered EMG];
+P1.yData.Color2	=>	[0, 0];
+P1.yData.Color1	=>	[6, 6];
+P1.yData.Data	=>	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+P1.yData.Descr	=>	[cleaned EMG Signal];
+P1.yData.DispRange	=>	[-0.029011194, 0.031809703];
+P1.yData.Factor	=>	[2.68E8];
+P1.yData.Offset	=>	[0];
+P1.yData.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.yData.Unit	=>	[mV];
+P1.yData1.Alias	=>	[];
+P1.yData1.Color2	=>	[0, 0, 0, 0];
+P1.yData1.Color1	=>	[0, 9];
+P1.yData1.Data	=>	[0];
+P1.yData1.Descr	=>	[];
+P1.yData1.DispRange	=>	[0.0, 50.0];
+P1.yData1.Factor	=>	[1.0];
+P1.yData1.Offset	=>	[0];
+P1.yData1.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
+P1.yData1.Unit	=>	[];
+
+
