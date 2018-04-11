@@ -52,16 +52,17 @@ public class cKonst {
 */
     public static int[] nAppProps={0,0,0,0,0,1}; //170904level of permissions given to user
     public enum eAppProps {     //Application properties enumerator
-
         kBlockScrolling,
         kAutoConnect,
-        kZoomEnable
+        kZoomEnable,
+        kShowDataPanel
         }
+
     enum bitmask {
         nil1;
         static int kDebug=1<<3;    //  Debug level of user level
-
     }
+
     static int nTextSize=15;
     enum eTexts {     //
         a;

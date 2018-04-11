@@ -1,8 +1,8 @@
 # LM_Android
 
-Android application for controlling the LiberMano device
+Android application for controlling the LibreMano device
 
-Libermano is a system for restoring movements. (A branch of the MeCFES system https://mecfes.wikispaces.com/)
+LibreMano is a system for restoring movements. (A branch of the MeCFES system https://mecfes.wikispaces.com/)
 
 The parts are 
 

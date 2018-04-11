@@ -181,7 +181,8 @@ import static java.lang.Math.abs;
         }
 
         public boolean bInputGesture() {
-            boolean b=bLongPress|bDoubleTap;
+            //boolean b=bLongPress|bDoubleTap;
+            boolean b=bDoubleTap;               //180403 just doubletab
             bDoubleTap=false;bLongPress=false;      //Clear
             return b;
         }

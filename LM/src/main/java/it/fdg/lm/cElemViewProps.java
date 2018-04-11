@@ -32,9 +32,9 @@ public  class cElemViewProps {
     public View myView = null;               //The owner view
     private int nAutoRangeCount = 0;
     private int nProperties;                    //Properties of the view, enabled, ...
+    public int nShape=0;                         //Shape of the view
     private String _ProtName="Null", _ElemName="None";        //identifiers for the element
     private int _ElemDataIdx = 0;           //If scalar this is the cProtData.aData[index] to show
-
     public void mZoom(float scalePointX, float scalePointY, float nFactor) {    //171003 implementing zoom
         float na = myProtElem().nDisplayRange[0];
         float nb = myProtElem().nDisplayRange[1];
@@ -45,9 +45,6 @@ public  class cElemViewProps {
         myProtElem().nDisplayRange[0]=newA;
         myProtElem().nDisplayRange[1]=newB;
     }
-
-
-
     public String mScaleMaxStr() {
         if (myProtElem()==null) return "Null";
         float v = myProtElem().nDisplayRange[1];
@@ -105,22 +102,24 @@ public  class cElemViewProps {
     }
 
     private void _mElemBinding(boolean bGetIt, String sKey) {
-        String[] s={"ProtIdx","VarName","DataIndex","Props"};
+        //In the config file in format example    WV0A0.Name	=>	[P1,IMin, 0, 3];
+        String[] s={"ProtIdx","VarName","DataIndex","Props","shape"};
         if (bGetIt==false) {
             if (myProtElem()==null) return;
-
-
             s[0] = _ProtName;
             s[1] = sElemName();
             s[2] = mInt2str(_ElemDataIdx);
             s[3] = mInt2str(nProperties);
+            s[4] = mInt2str(nShape);
+
         }
         s = mPrefs5(bGetIt, sKey, s);
-        s = mArrayRedim(s, 3);       //Make sure that it's there
+        s = mArrayRedim(s, 4);       //Make sure that it's there
         mSetElement(s[0],s[1]);
         _ElemDataIdx = mStr2Int(s[2]);
         nProperties = mStr2Int(s[3]);     //Visibility of the control
- }
+        nShape = mStr2Int(s[4]);
+    }
 
     void mSetElement(String protName, String elemName) {
         _ProtName=protName;

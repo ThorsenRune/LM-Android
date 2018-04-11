@@ -14,6 +14,7 @@ import static it.fdg.lm.cFunk.mInt2str;
 import static it.fdg.lm.cFunk.mStr2Int;
 import static it.fdg.lm.cProgram3.bAdmin;
 import static it.fdg.lm.cProgram3.getElementViewById;
+import static it.fdg.lm.cProgram3.oUInput;
 
 public class cBitField extends BaseActivity {
     private CheckBox[] cb=new CheckBox[32];
@@ -178,7 +179,7 @@ public class cBitField extends BaseActivity {
 
     public boolean mMenuAction_bf(Menu myMenu, int nId) {
         if (mnuClick(nId, "Set Value", cUInput.mSelected())) {
-            cUInput.mInputValue(true);
+            oUInput.mInputValue1();
         }
 
         if (bAdmin()) {            ;       //170728    Advanced permissions

@@ -25,7 +25,7 @@ import static it.fdg.lm.cProgram3.mMessage;
 import static it.fdg.lm.cProgram3.mPersistAllData;
 import static it.fdg.lm.cProgram3.sFile_ProtCfg;
 import static it.fdg.lm.cProgram3.sMsgLog;
-import static it.fdg.lm.cUInput.mSettingsFile_Select;
+
 
 
 public class cSetupFile extends BaseActivity {
@@ -158,9 +158,9 @@ public class cSetupFile extends BaseActivity {
         if (mnuClick(nId   ,"Clear text",true)){
             mEditText("");
             return true;
-        } else if (mnuClick(nId,"Load protocol settings",true)) {
+        /*}        else if (mnuClick(nId,"Load protocol settings",true)) {   //180308 move this to 180308c
             mSettingsFile_Select();
-            return true;
+            return true;*/
         } else if (mnuClick(nId,"Show current Settings",true)) {
             mShowSettings();
             return true;

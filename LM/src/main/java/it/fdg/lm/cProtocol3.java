@@ -163,6 +163,8 @@ public  class cProtocol3 {                  //This was formerly just called prot
             boolean ret = mTX_Dispatch();      //170605    Rewritten to process only datarequests
             oSerial.mProcessSerial();    //Send the request immediately
             mDispatchRX(nCmd, zState);
+            if (!oSerial.mIsConnected())
+                mStateSet(kUnconnected2);   //180328    detect broken connection disconnected
         } else if (mIsState(kDoConnect1)){
             if (oSerial.isConnected()) {
                 oSerial.mDisconnect();
@@ -181,7 +183,7 @@ public  class cProtocol3 {                  //This was formerly just called prot
         } else if (getState()==  kProtInitInProgress) {
              bDoRedraw=true;
             if (mVerifyInit()) {
-                mMessage(sProtName()+" Ready");
+                mMessage( sDeviceName()+ " Ready");
                 bDoRedraw=true;
                 mStateSet(cKonst.eProtState.kProtInitDone);    //Protocol good to use
             }else {
@@ -193,6 +195,10 @@ public  class cProtocol3 {                  //This was formerly just called prot
             bDoRedraw=true;
          }
         cProgram3.bDoRefresh = true;
+    }
+
+    private String sDeviceName() {
+        return  oaProtocols[myIndex].mDeviceNameGet();
     }
 
     public String sProtName() {
@@ -483,7 +489,7 @@ public  class cProtocol3 {                  //This was formerly just called prot
         return nProtState;
     }
     public void mStateSet(cKonst.eProtState newState) {      //!!!Refactor to enum
-        if (nProtState!=newState)
+        if (nProtState!=newState)           //180404
             bDoRedraw=true;             //171012    A changed state will require a display redraw
         nProtState=newState;
     }
@@ -614,6 +620,7 @@ public  class cProtocol3 {                  //This was formerly just called prot
     public void mDeviceNameSet(String s) {      //Set a new device name and request a connection
         mMessage("Pinging "+s);
         sDevices2[myIndex]=s;
+        cProgram3.bDoSavePersistent=true;
         mStateSet(kDoConnect1);
     }
 }

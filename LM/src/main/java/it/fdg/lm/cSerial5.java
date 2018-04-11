@@ -91,7 +91,6 @@ public class cSerial5 {
             if (oTXFIFO.mCanPop(1)==false) break;                //Send FIFO data to serial output stream
             int byB=oTXFIFO.mFIFOpop();
             mWriteByte(oOutput, (byte) byB);
-
         }
         byte[] aBytes = mReadBytes(oInput);
         if (aBytes==null) return ;
@@ -112,7 +111,9 @@ public class cSerial5 {
             bDoRedraw=true;     //Something has changed redraw controls
         nState_Serial=nNewState;
     }
-
+    public boolean mIsConnected(){
+        return nState_Serial==kBT_Connected1;
+    }
     public cKonst.eSerial mStateGet() {
         return nState_Serial;
     }
@@ -624,7 +625,10 @@ public boolean mConnect(String s) {        //Find and mConnect to the bluetooth
     }
 
     public boolean isConnected() {
-        return mIsState(kBT_Connected1);
+        if (oInput==null)
+            return false;
+        else
+            return mIsState(kBT_Connected1);
     }
 }
 

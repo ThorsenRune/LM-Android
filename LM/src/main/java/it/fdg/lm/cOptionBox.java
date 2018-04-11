@@ -35,6 +35,12 @@ public class cOptionBox extends LinearLayout {
         init();
     }
 
+    public cOptionBox(Context mContext, String s, int i, boolean b) {
+        super(mContext);
+        init();
+        this.createRadioButton1(mContext, s,i,b);
+    }
+
     // Setup views
     private void init() {
         myLayout =(LinearLayout) getRootView();
@@ -47,7 +53,12 @@ public class cOptionBox extends LinearLayout {
             oCV.createRadioButton("Options", "O0;O1;O2;O3");       //Demotext
         }
     }
-
+    public void createRadioButton1(Context ctxt, String sOptionsList, int iSelectedIdx, boolean bHorizontal) {   //Ver 171222
+        mIndex(iSelectedIdx);
+        createRadioButton("",sOptionsList);
+        mSetHorizontal(bHorizontal);
+        return ;
+    }
     public cOptionBox createRadioButton(String sTitle, String sList) {
         myLayout.removeAllViews();
         String[] sLbl = sList.split(";");

@@ -9,9 +9,11 @@ package it.fdg.lm;
 
 import static it.fdg.lm.cFileSystem.mPrefs5;
 import static it.fdg.lm.cFunk.mArrayRedim;
+import static it.fdg.lm.cFunk.mTextLike;
 import static it.fdg.lm.cKonst.sKeyFieldSep;
 import static it.fdg.lm.cProgram3.mErrMsg;
 import static it.fdg.lm.cProgram3.mPalIdx2Col;
+import static it.fdg.lm.cProgram3.oaProtocols;
 
 public class cProtElem {
     private cProtocol3 oProtocol;         //The parent of this protocol element
@@ -169,7 +171,9 @@ public class cProtElem {
 //        return nDataArraySize;
     }
     public void nDataLength(int nNewLength){
-        if (nDataLength()!=nNewLength)
+        if (nNewLength<0)
+            mErrMsg("Err 180404 Unexpected data length in protocol");   //The device has sent a element size of null or less
+        else if (nDataLength()!=nNewLength)
             aData=new int[nNewLength];
     }
 
@@ -312,4 +316,22 @@ public class cProtElem {
     public cProtocol3 myProtocol() {
         return oProtocol;
     }
+
+    public static int mIndex2ProtName(String s) {
+        for (int i = 0; i < oaProtocols.length; i++) {
+            if (mTextLike(oaProtocols[i].sProtName(),s))
+                return i;
+        }
+        return 0;
+    }
+
+    public static String[] mIndexStringArry(cProtElem myElement) {
+        int nVecLen=myElement.nDataLength();
+        String sIndex[]=new String[nVecLen];
+        for(int i = 0; i<nVecLen; i++) {
+            sIndex[i] ="Idx: "+ Integer.toString(i);
+        }
+        return sIndex;
+    }
+
 }

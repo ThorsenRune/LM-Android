@@ -21,8 +21,8 @@ import java.util.ArrayList;
 
 import static it.fdg.lm.cAndMeth.mMatchChildVisibility;
 import static it.fdg.lm.cAndMeth.mSetVisibility;
-import static it.fdg.lm.cAndMeth.mSleep;
 import static it.fdg.lm.cFunk.mLimit;
+import static it.fdg.lm.cProgram3.bDoRedraw;
 import static it.fdg.lm.cProgram3.bDoRefresh;
 import static it.fdg.lm.cProgram3.mAppSettings;
 import static it.fdg.lm.cProgram3.mCommunicate;
@@ -31,6 +31,7 @@ import static it.fdg.lm.cProgram3.mMsgDebug;
 import static it.fdg.lm.cProgram3.mPersistAllData;
 import static it.fdg.lm.cProgram3.mySignal;
 import static it.fdg.lm.cProgram3.oGlobalGestureDetector;
+import static it.fdg.lm.cProgram3.oUInput;
 import static it.fdg.lm.cProgram3.oaProtocols;
 import static it.fdg.lm.cProgram3.sFile_ProtCfg;
 import static java.lang.Integer.signum;
@@ -72,9 +73,7 @@ public class fMain extends BaseActivity {
         //Prepare the protocols
         mAppSettings(true);
         mPersistAllData(true,sFile_ProtCfg);         //onCreate
-
     }
-
 
     private void mInitControls() {      //Setup widget references for this display
   /*     initiate  views        */
@@ -125,6 +124,7 @@ public class fMain extends BaseActivity {
             }
         }
     }
+
     private void mTouchListening(final View view) {     //Activated for each control that can be activated by touch
         view.setOnTouchListener(new View.OnTouchListener() {         //Touch event for the watch pane
 
@@ -159,7 +159,7 @@ public class fMain extends BaseActivity {
                     if (oGlobalGestureDetector.bScaling()) {       //Check global gestures first
                         mMsgDebug("Scaling gesture 171003");
                     } else if (oGlobalGestureDetector.bInputGesture()) {           //Long or doubletap a slider will activate value input
-                        cUInput.mInputValue(true);
+                        oUInput.mInputValue1();
                     } else
                         bRetVal = V.onTouchEvent(event);              //Perform sliding movements
                     return  bRetVal;           //The event was processed
@@ -186,7 +186,7 @@ public class fMain extends BaseActivity {
         } else if (cProgram3.oFocusdActivity instanceof cBitField) {
             ((cBitField) cProgram3.oFocusdActivity).mRefresh(doRedraw);
         } else {
-
+            if (bDoRedraw)  cProgram3.mShowData(cProgram3.mShowData());
             cProgram3.mControlsRefresh(doRedraw);
             cUInput.mRefresh(doRedraw);
             for (int i = 0; i < cSlider.nSliderCount; i++) {
@@ -199,7 +199,7 @@ public class fMain extends BaseActivity {
             if (cProgram3.mySignal != null) {
                 cProgram3.mySignal.mRefreshSignal(doRedraw);
             }
-
+            if (bDoRedraw) oUInput.mCommand(false);
         }
     }
 
@@ -229,6 +229,7 @@ public class fMain extends BaseActivity {
         cProgram3.mContext=this;
         mEntryPoint();
         cmdText("Command/information button");
+       // mPrivileges(0);     //180328B
     }
     @Override
     public void onResume() {
@@ -246,11 +247,11 @@ public class fMain extends BaseActivity {
     @Override
     public void onBackPressed() {       //Some black magic asking user how to quit, saving/not saving data
         mMessage("Ending program");
-        if (isFinishing())        cProgram3.mEndProgram();
-        mSleep(2000);
-        finish();
+        cProgram3.mEndProgram();
+        //mSleep(2000);
+        //finish();
         super.onBackPressed();
-        finishAffinity();
+        //finishAffinity();
 
     }
 

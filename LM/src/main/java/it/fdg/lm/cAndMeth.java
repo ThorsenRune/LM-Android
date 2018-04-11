@@ -15,10 +15,12 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.ColorDrawable;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -196,8 +198,7 @@ public class cAndMeth extends Activity{
                 View view =super.getView(position, convertView, parent);
                 TextView textView=(TextView) view.findViewById(android.R.id.text1);
                 mTextViewSetTextSize(textView);
-                //textView.setTextColor(Color.WHITE);
-                textView.setBackgroundColor(Color.BLACK);
+                textView.setGravity(Gravity.RIGHT);
                 return view;
             }
             int i=0;
@@ -207,6 +208,7 @@ public class cAndMeth extends Activity{
                 if (1==((i++) % 2))  textView.setTextColor(Color.YELLOW);
                 else textView.setTextColor(Color.WHITE);
                 mTextViewSetTextSize(textView);
+                textView.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_END);
                 textView.setBackgroundColor(Color.BLACK);
                 return textView;
             }
@@ -260,6 +262,21 @@ public class cAndMeth extends Activity{
         if (vb1==null) return 0;
         int c1 = vb1.getColor();
         return c1;
+    }
+
+    public static void mTextEdit_SetFocusable(EditText txtEdit) {   //180329 text edit setup
+        txtEdit.setShowSoftInputOnFocus(true);  //Make the keyboard pop up on focus
+        txtEdit.setHighlightColor(Color.BLACK);
+        txtEdit.setFocusableInTouchMode(true);
+        txtEdit.setOnFocusChangeListener(new View.OnFocusChangeListener(){
+            public void onFocusChange(View v, boolean hasFocus){
+                if (hasFocus) {
+                    ((EditText) v).selectAll();
+//                    ((EditText) v).performLongClick();
+                }
+            }
+        });
+
     }
 }
 

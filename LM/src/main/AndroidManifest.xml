@@ -10,13 +10,13 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="LM 180409"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".fMain"
-            android:label="@string/app_name"
+            android:name="it.fdg.lm.fMain"
+            android:label="LibreMano"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,21 +25,21 @@
         </activity>
         <!-- note170530     -->
         <activity
-            android:name=".cSetupFile"
+            android:name="it.fdg.lm.cSetupFile"
             android:label="Settings"
-            android:parentActivityName=".fMain">
+            android:parentActivityName="it.fdg.lm.fMain">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="it.fdg.lm.fMain" />
         </activity>
-        <activity android:name=".colorpick" />
+        <activity android:name="it.fdg.lm.colorpick" />
         <activity
-            android:name=".cBitField"
+            android:name="it.fdg.lm.cBitField"
             android:label="Mode bit settings"
-            android:parentActivityName=".fMain">
+            android:parentActivityName="it.fdg.lm.fMain">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".fMain" />
+                android:value="it.fdg.lm.fMain" />
         </activity>
 
     </application>

@@ -159,7 +159,7 @@ public class cFileSystem {
         String[] list = directory.list();
         String fl="";
         for (int i = 0; i < list.length; i++) {
-            if (mTextLike(list[i],StripExt)){
+            if (list[i].contains(StripExt)){
                 fl = fl + list[i].replaceAll(StripExt, ";");
             }
         }

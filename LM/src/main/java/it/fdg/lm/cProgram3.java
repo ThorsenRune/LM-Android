@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static it.fdg.lm.cAndMeth.mSetVisibility;
 import static it.fdg.lm.cDebug.nTestCount;
 import static it.fdg.lm.cFileSystem.mPersistHex;
 import static it.fdg.lm.cFileSystem.mPrefFileNameSet;
@@ -27,6 +28,7 @@ import static it.fdg.lm.cFunk.mLimit;
 import static it.fdg.lm.cFunk.mTextLike;
 import static it.fdg.lm.cKonst.eAppProps.kAutoConnect;
 import static it.fdg.lm.cKonst.eAppProps.kZoomEnable;
+import static it.fdg.lm.cKonst.kUserAdmin;
 import static it.fdg.lm.cKonst.nAppProps;
 
 
@@ -50,12 +52,16 @@ public final class cProgram3 {
     private static int _RefreshRate;            //Refresh rate of the screen and communication protocol
     private static int _Privileges;
     private static boolean _DesignMode;
+    public static String sConnectStatus ="";    //todo 180308
+    public static cUInput oUInput=new cUInput();
+    public static boolean bDoSavePersistent;
+
 
     //SGetter for refresh rates
     public static void nRefreshRate(int i) {        //Adjust communication speed
         i=mLimit(60,i,1000);
         _RefreshRate=i;
-        mMessage("New refresh rate " +i);
+        mMsgLog("New refresh rate " +i);
     }
     public  static int nRefreshRate(){return _RefreshRate;}
     //Other application properties
@@ -152,7 +158,7 @@ public final class cProgram3 {
                     nTestCount[1]++;
                     Thread.currentThread().setName("Prot_Async");
                     if (oaProtocols!=null)
-                    for (int i = 0; i <oaProtocols.length ; i++) {
+                    for (int i = 0; i <oaProtocols.length ; i++) {//180103 index fix
                         if (oaProtocols[i] != null) oaProtocols[i].mProcess_Async();    //Non gui
                     }
                     mLoopTime =cFunk.mAverage(mLoopTime, (System.currentTimeMillis() - nStartTime));
@@ -166,11 +172,13 @@ public final class cProgram3 {
             mMessage("Not running");
         }
     }       //set Run/Pause of device communication
+
     private static Runnable mPeriodicProcessing = new Runnable() {
         @Override
         public void run() {
-            if(bRunning1 ) mPeriodicProcessingExec();
+            if (bRunning1) mPeriodicProcessingExec();
         }
+
         private void mPeriodicProcessingExec() {                    //This will repeat itself
             cProgram3.mMainProcess1();
             if (bRunning1)
@@ -179,7 +187,6 @@ public final class cProgram3 {
                 mMessage("Stopped");
         }
     };
-
 
     public static void mRedraw() {  //// Redraw displays
         fMain.mRefresh_DispMain(true);     //principal redraw
@@ -249,13 +256,16 @@ public static void mAppSettings(boolean bGet) {
             cElemViewProps oa = getElementViewById(sWidgetIds[i]);
             oa.mViewSettings3(bGet,sWidgetIds[i]);
         }
+        cProgram3.bDoSavePersistent=false;      //Clear the save persistent flag
   }             //Save/Load settings from persistent storage
 
 
     //          MESSAGES
     public static void mMessage(String msg){
         mMsgLog(msg);
-        mAlert1(msg);
+        mMsgStatus(msg);
+        if (nUserLevel1(kUserAdmin))
+            mAlert1(msg);
     }
 
 
@@ -272,8 +282,8 @@ public static void mAppSettings(boolean bGet) {
     }
 
     public static void mMsgStatus(String msg){      //Display current status of protocol
+        fMain.cmdText(msg);
         mMsgLog(msg);
-        BaseActivity.mStatus(msg);
         bDoRefresh=true;
     }
     public static void mMsgDebug(String msg){      //Display current status of protocol
@@ -389,6 +399,7 @@ public static void mAppSettings(boolean bGet) {
             if (oaElementViews[i] == null) break;
             oaElementViews[i].mRefresh( doRedraw);
         }
+
     }
 
 
@@ -409,4 +420,14 @@ public static void mAppSettings(boolean bGet) {
         }
 
 
+    public static boolean mShowData() {
+        return mAppProps(cKonst.eAppProps.kShowDataPanel)==1;
+
+    }
+
+    public static void mShowData(boolean b) {
+        if (b) mAppPropsSet(cKonst.eAppProps.kShowDataPanel,1);
+        else mAppPropsSet(cKonst.eAppProps.kShowDataPanel,0);
+        mSetVisibility( fMain.fPanelData,b);
+    }
 }

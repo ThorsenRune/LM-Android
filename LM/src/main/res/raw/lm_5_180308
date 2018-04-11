@@ -1,10 +1,10 @@
 //  Google Docs: https://docs.google.com/document/d/1ND8MsqkXnXizi4cFFNcPxWSYxGXKiXosxrkFZ2ebnlA/edit
-
+// Revision 180308
 App.Description	=>	[LM Settings file: LM_5.txt  Date: 18-Set-2017 12:40 , Revision 170904];
 
 
 
-Devices	=>	[LM-BT05];      //P1,P2 etc
+Devices	=>	[LM-BT04];      //P1,P2 etc
 
 P1.Elements	=>	[nMode.all_flags, aRMSfilt, xData, yData, xData1, yData1, IMin, aIAmp, Offset, Gain, IMax, HVValue, nBlankInterval, bErrFlags.all_flags, nTimerInMs, StimCountEx, aRMSshift, aMLev, IMaxLimit, StimNegDur];
 
@@ -12,13 +12,13 @@ P1.Elements	=>	[nMode.all_flags, aRMSfilt, xData, yData, xData1, yData1, IMin, a
 Widgets	=>	[B0, WV0A0, WV0B0, WV0C0, WV6A0, WV6B0,
             WV7A0, WS1_0, WS1_1, WH0A1, WH0B1, WH0C1, WH0D1 ];
 //                  Name of element, index in elementvector, properties b0:visibility,b1:editable,b2:write on start
-WV0A0.Name	=>	[P1,IMin, 0, 3];
-WV0B0.Name	=>	[P1,aIAmp, 0, 1];
-WV0C0.Name	=>	[P1,IMax, 0, 3];
+WV0A0.Name	=>	[P1,IMin, 0, 3,2];
+WV0B0.Name	=>	[P1,aIAmp, 0, 1,0];
+WV0C0.Name	=>	[P1,IMax, 0, 3,3];
 
-WV6A0.Name	=>	[P1,Offset, 0, 3];
-WV6B0.Name	=>	[P1,aRMSfilt, 0, 1];
-WV7A0.Name	=>	[P1,Gain, 0, 3];
+WV6A0.Name	=>	[P1,Offset, 0, 3,3];
+WV6B0.Name	=>	[P1,aRMSfilt, 0, 1,0];
+WV7A0.Name	=>	[P1,Gain, 0, 3,4];
 //Horizontal sliders
 
 WH0A1.Name	=>	[P1,nBlankInterval, 0, 3];
@@ -32,7 +32,7 @@ WS1_1.Name	=>	[P1,yData, 0, 1];
 
 B0.Name	=>	[P1,nMode.all_flags, 0, 1];
 
-P1.Gain.Alias	=>	[Guardagno A];
+P1.Gain.Alias	=>	[Guardagno];
 P1.Gain.Color1	=>	[3, 3];          //Green
 P1.Gain.Color2	=>	[3, 3];
 P1.Gain.Data	=>	[10, 10];
@@ -74,11 +74,11 @@ P1.IMaxLimit.Offset	=>	[0];
 P1.IMaxLimit.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
 P1.IMaxLimit.Unit	=>	[];
 P1.IMin.Alias	=>	[Min Stim];;P1.IMin.Descr	=>	[Livello minimo dello stimolozione];
-P1.IMin.Color1	=>	[9, 9];; P1.IMin.Color2	=>	[9, 9];;
+P1.IMin.Color1	=>	[9, 9]; P1.IMin.Color2	=>	[0, 9];;
 P1.IMin.Data	    =>	[66, 0];;P1.IMin.Factor	=>	[10.0];;
 P1.IMin.DispRange	=>	[0.0, 50.0];;P1.IMin.Offset	=>	[0];;
 P1.IMin.Properties	=>	[1, 1];;P1.IMin.Unit	=>	[mA];;
-P1.Offset.Alias	=>	[Threshold for EMG];
+P1.Offset.Alias	=>	[Soglia EMG];
 P1.Offset.Color2	=>	[0, 0, 0, 0];
 P1.Offset.Color1	=>	[7, 20, 20];
 P1.Offset.Data	=>	[100000, 100000];

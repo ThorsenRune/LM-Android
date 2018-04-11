@@ -22,7 +22,7 @@ import static it.fdg.lm.cFunk.mStr2Int;
 
 
 public class cData_View extends LinearLayout {
-    private cElemViewProps oElemViewProps =null;
+    private cElemViewProps _ElemViewProps =null;
     //******************    PRIVATE
     private SeekBar editSlider;
     private Button lblElementName;
@@ -68,12 +68,12 @@ public class cData_View extends LinearLayout {
     }
 
     private void mEditValue() {
-        cUInput.mSetFocus(oElemViewProps);
-        cUInput.mInputValue(true);
+        cUInput.mSetFocus(_ElemViewProps);
+        cProgram3.oUInput.mInputValue1();
     }
 
     private void mSelectElement() {
-        cUInput.mSetFocus(oElemViewProps);
+        cUInput.mSetFocus(this);       //180103 but it should be handled by the central handler
         cUInput.mInputViewSettings1(true);
     }
 
@@ -82,7 +82,7 @@ public class cData_View extends LinearLayout {
             public boolean onKey(View view, int keyCode, KeyEvent keyevent) {
                 //If the keyevent is a key-down event on the "enter" button
                 if ((keyevent.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
-                    oElemViewProps.mRawValue(mStr2Int(editValue.getText().toString()));
+                    _ElemViewProps.mRawValue(mStr2Int(editValue.getText().toString()));
                     mParentRedraw();
                     return true;
                 }
@@ -98,20 +98,20 @@ public class cData_View extends LinearLayout {
     }
     public void mRefresh(boolean bRedraw) {
         if (bRedraw) mRedraw();
-        if (oElemViewProps ==null) {
+        if (_ElemViewProps ==null) {
             cProgram3.mErrMsg("Empty element failure 170621");
             return;
         }
         if (editValue==null) return;
-        String s = mInt2str(oElemViewProps.mRawValue());
+        String s = mInt2str(_ElemViewProps.mRawValue());
         editValue.setText(s);
         editValue.invalidate();
     }       //Refresh the control (or full redraw)
 
     private void mRedraw() {
-        oElemViewProps.mUpdate(this);
-        if (oElemViewProps.bVisible()) {
-            lblElementName.setText(oElemViewProps.mGetName());
+        _ElemViewProps.mUpdate(this);
+        if (_ElemViewProps.bVisible()) {
+            lblElementName.setText(_ElemViewProps.mGetName());
         }
     }           //Draw whats not refreshed
 
@@ -121,20 +121,20 @@ public class cData_View extends LinearLayout {
     }
 
     public int mRawValue() {
-        return oElemViewProps.mRawValue();
+        return _ElemViewProps.mRawValue();
     }
 
     public void mRawValue(int myValue) {
-        oElemViewProps.mRawValue(myValue);
+        _ElemViewProps.mRawValue(myValue);
     }
 
 //  Getter setters
     public cElemViewProps mElemViewProps() {
-        return oElemViewProps;
+        return _ElemViewProps;
     }
 
     public void mElemViewProps(cElemViewProps oNewElemViewProps) {
-        oElemViewProps=oNewElemViewProps;
+        _ElemViewProps =oNewElemViewProps;
     }
     //          SYSTEM METHODS
     @Override
@@ -154,5 +154,9 @@ public class cData_View extends LinearLayout {
         editSlider.setVisibility(GONE);      //Hide the layout
         super.onFinishInflate();
     }   //!? Sorry,I still dont understand when this is called
+
+    public cElemViewProps oElemViewProps() {
+            return _ElemViewProps;
+    }
 }
 

@@ -106,7 +106,7 @@ public class cSlider {
         oSliderView.bDesignMode = bDesignMode();
         for (int i = 0; i < oElemViewProps.length; i++) {
             if (oElemViewProps[i].myProtElem1() != null) {
-                oSliderView.mSetHandleColor(i, oElemViewProps[i].mForeColor());
+                oSliderView.mSetHandleColor(i, oElemViewProps[i].mForeColor(),oElemViewProps[i].nShape);
                 oSliderView.mSetIntervalColor(i, oElemViewProps[i].mBackColor());
                 oSliderView.mSetDescription(i, oElemViewProps[i].mAlias());
                 oSliderView.mEnabled(i, oElemViewProps[i].bEnabled());

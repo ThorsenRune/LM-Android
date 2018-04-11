@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 
@@ -23,13 +24,15 @@ public class cSliderHandle {
 	private Rect oCanvasArea;
 	private cSliderView oParent;
 	private int nHandleSize;		//Size of the control handle
+	public int nShape=0;
+	public static String sShape="Butterfly,Rectangle,Tri Up, Tri Down,Diamond";
 
 
 	//**************************			INITIALIZATIONS   ***********************
 	public cSliderHandle(cSliderView oSliderView) {
-//		BitmapFactory.Options opts = new BitmapFactory.Options();
-//		opts.inJustDecodeBounds = true;
-//		img = BitmapFactory.decodeResource(context.getResources(), drawable);
+ 		BitmapFactory.Options opts = new BitmapFactory.Options();
+ 		opts.inJustDecodeBounds = true;
+// 		img = BitmapFactory.decodeResource(context.getResources(), drawable);
 		mInit(oSliderView);
 	}
 
@@ -83,7 +86,7 @@ public class cSliderHandle {
 		return img;
 	}
 
-	public void mDraw(Canvas canvas, boolean bEnabled) {
+	public void mDraw(Canvas canvas) { 		//type= Diamond, rect, triang up, triang down
 		//canvas.drawBitmap(this.getBitmap(), this.getX()-radiusKnob, this.getY()-radiusKnob, null);
 		int coordY = getY();
 		int coordX= getX();
@@ -94,17 +97,39 @@ public class cSliderHandle {
 				setX(0);                            //Limit lower bound
 
         //canvas.drawBitmap(this.getBitmap(), this.getX()-radiusKnob, this.getY()-radiusKnob, null);
-        if (bEnabled) {
-            canvas.drawCircle(coordX,coordY,nHandleSize, oPaintHandle);
-            canvas.drawCircle(coordX,coordY,nHandleSize, oPaintBorder);
-        }
-        else {			//Disabled is a rectangle
-            float size = 5;//oPaintHandle.getStrokeWidth();
-            canvas.drawRect(coordX-size,coordY-nHandleSize,coordX+size,coordY+nHandleSize,oPaintHandle);
-			canvas.drawRect(coordX-size,coordY-nHandleSize,coordX+size,coordY+nHandleSize,oPaintBorder);
-        }
-    }
+ 			Path path = new Path();
+			float nHeight = nHandleSize;
+			int size = 5;
 
+		if (nShape==0){ //Butterfly
+			path.moveTo(size,-nHandleSize);
+			path.lineTo(-size,-nHandleSize);
+			path.lineTo(size,+nHandleSize);
+			path.lineTo(-size,nHandleSize);
+		} else 		if (nShape==1){//Rectangle
+			path.moveTo(-size,-nHandleSize);
+			path.lineTo(size,-nHandleSize);
+			path.lineTo(size,+nHandleSize);
+			path.lineTo(-size,nHandleSize);
+		} else if (nShape==2){//Triangle up
+				path.moveTo(-nHeight,-nHandleSize);
+				path.lineTo(0,0);
+				path.lineTo(-nHeight,nHandleSize);
+			} else if (nShape==3){//Triangle down
+				path.moveTo(nHeight,-nHandleSize);
+				path.lineTo(0,0);
+				path.lineTo(nHeight,nHandleSize);
+			} else  if (nShape==4){ //Diamond
+				path.moveTo(-nHeight,0);
+				path.lineTo(0,nHandleSize);
+				path.lineTo(nHeight,0);
+				path.lineTo(0,-nHandleSize);
+			}
+			path.offset(coordX,coordY);
+			path.close();
+			canvas.drawPath(path,oPaintHandle);
+			canvas.drawPath(path,oPaintBorder);
+    }
 
     public void mSetArea(Rect oArea) {
 		oCanvasArea =oArea;

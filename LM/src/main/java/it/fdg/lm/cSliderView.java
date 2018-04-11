@@ -60,6 +60,7 @@ public class cSliderView extends View {
     private boolean bCanDrag=false;
     protected boolean bRotate=false;
     private boolean bEnabled[];                                     //true in designmode
+    private int nType[];                                     //180327 type of handle Diamond,rect,up,down
     private boolean bVisible[];                                     //170914  true in designmode
     private Context mContext;
     private TextView lblLbl;
@@ -133,6 +134,7 @@ public class cSliderView extends View {
     public void mSetHandles(int nNewNoOfHandles) {      //Initialize and set number of handles
         kControls=nNewNoOfHandles;
 		bEnabled=new boolean[nNewNoOfHandles];		//170913 booleans determining user input capability
+        nType=new int[nNewNoOfHandles];             //180327    Type of handle
 		bLimit2Siblings=new boolean[nNewNoOfHandles];//170915 Libit to be within siblings
         bVisible=new boolean[nNewNoOfHandles];		//170913 booleans determining user input capability
         bInitialized = false;      //Will redimension the controls asap
@@ -275,6 +277,7 @@ public class cSliderView extends View {
             oHandle[i].mSetArea(oArea);
             oHandle[i].setY(oArea.centerY());
             oHandle[i].setColor(mColorHandle[i]);
+            oHandle[i].nShape=nType[i];
         }
         eventValueChanged(mGetAllValues());    //Notify owner that the values are ready
         invalidate();       //Needed for preview
@@ -386,8 +389,9 @@ public class cSliderView extends View {
         return bEnabled[idx]|bDesignMode;
     }
 
-    public void   mSetHandleColor(int nHandleIdx, int nColor) {
+    public void   mSetHandleColor(int nHandleIdx, int nColor,int nShape) {
         mColorHandle[nHandleIdx]=nColor;
+        nType[nHandleIdx]=nShape;
     }
 
     public void mSetDescription(int i, String s) {
@@ -428,8 +432,7 @@ public class cSliderView extends View {
 //Place thumbs
         for (int i = 0; i< kControls; i++) {
             if (bVisible[i]|bDesignMode)
-                oHandle[i].mDraw(oCanvas,bEnabled[i]);
-
+                oHandle[i].mDraw(oCanvas);
         }
         mDrawTickMarks(oCanvas);
         mDrawTexts(oCanvas);
