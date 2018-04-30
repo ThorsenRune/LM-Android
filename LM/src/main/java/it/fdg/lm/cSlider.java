@@ -15,23 +15,23 @@ import android.view.View;
 import static it.fdg.lm.cAndMeth.mSetVisibility;
 import static it.fdg.lm.cFunk.mStr2Int;
 import static it.fdg.lm.cProgram3.bDesignMode;
-import static it.fdg.lm.cProgram3.getElementViewById;
+import static it.fdg.lm.cProgram3.mGetViewProps;
 import static it.fdg.lm.cProgram3.mErrMsg;
 import static it.fdg.lm.cProgram3.nWatchPage;
 import static it.fdg.lm.cProgram3.oSlider;
 
-
 public class cSlider {
     public static int nSliderCount = 0;
+    private final Context mContext;
     public cSliderView oSliderView = null;                //The slider control
     cElemViewProps[] oElemViewProps;            //Visual properties for the handles of this control
     int nCurrentViewPropsIdx = 0;
     private String[] sElemViewPropsIds;         //Identifiers for retrieving objects
     // to check
-    private Context mContext;
+
     private int myIndex;                            //Index in sliderarray
-    private int bVisibility;
-    private int mySliderMax;
+
+
     private String mySliderTypeName;            //Slider identification name WS,WH,WV
     //PROPERTIES
     private String myId1;                            //Unique id of this control
@@ -77,9 +77,8 @@ public class cSlider {
         oElemViewProps = new cElemViewProps[sElemViewPropsIds.length];
         oSliderView.mSetHandles(sElemViewPropsIds.length);        //Set number of handles
         for (int i = 0; i < oElemViewProps.length; i++) {
-            oElemViewProps[i] = getElementViewById(sElemViewPropsIds[i]);     //Fetch a view properties object with this id
+            oElemViewProps[i] = mGetViewProps(oSliderView,sElemViewPropsIds[i]);     //Fetch a view properties object with this id
         }
-//!- 170913 handle visibility in mRedraw        oElemViewProps[0].mRedraw(oSliderView);	//
         mSetVisibility(oSliderView, oElemViewProps[0].bVisible());    //170913 First element determines the visibility of the control
     }
 
@@ -106,10 +105,11 @@ public class cSlider {
         oSliderView.bDesignMode = bDesignMode();
         for (int i = 0; i < oElemViewProps.length; i++) {
             if (oElemViewProps[i].myProtElem1() != null) {
-                oSliderView.mSetHandleColor(i, oElemViewProps[i].mForeColor(),oElemViewProps[i].nShape);
+                oSliderView.mSetHandleColor(i, oElemViewProps[i].mForeColor(),oElemViewProps[i].nTypeId);
                 oSliderView.mSetIntervalColor(i, oElemViewProps[i].mBackColor());
                 oSliderView.mSetDescription(i, oElemViewProps[i].mAlias());
                 oSliderView.mEnabled(i, oElemViewProps[i].bEnabled());
+                oSliderView.mLimit2Siblings(i, oElemViewProps[i].bLimit2Siblings());
                 oSliderView.mVisible(i, oElemViewProps[i].bVisible());
             }
         }

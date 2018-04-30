@@ -27,33 +27,33 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
-import static android.graphics.Color.RED;
+import static android.graphics.Color.GREEN;
 import static android.graphics.Color.WHITE;
+import static it.fdg.lm.cProgram3.nSliderSize;
 import static it.fdg.lm.cProgram3.oGraphText;
 
 public class cSliderView extends View {
     static cSliderView oFocusedSlider;          //Currently focused slider in the collection
     static cSliderHandle oFocusedHandle;        //Currently focused handle
     public float nScaleMax =100;
-    float nValues[]={10,20,30,40};
+
     static int margin=2;
     protected iHandleValueChangeListener iHandleValueChangeListener;
     private int kControls=4;        //Maximum controls
-    private cSliderHandle[] oHandle = new cSliderHandle[kControls]; // array that holds the oHandle
+    public cSliderHandle[] oHandle = new cSliderHandle[kControls]; // array that holds the oHandle
     private boolean bInitialized =false;
     private Paint paintBorder=new Paint();
-    private Paint oTextPaint=new TextPaint();
+
     private Paint mTickMarks =new Paint();
     private Paint oPaintInterval=new Paint();
     private Rect oRect[]=new Rect[kControls+1];       //rectangle for the intervals
-    private Rect oArea=new Rect();
+    private Rect oArea=new Rect();                      //Area of the slider body, Text outside
+    private int oBar[]=new int[4];                   //180416  Area of the bar
     public int nActiveIdx =0;            //Currently selected vertex/dragpoint
     private int[] mColorHandle= {Color.YELLOW, Color.MAGENTA, Color.LTGRAY, Color.GREEN};
     private int[] mColorInterval= {Color.YELLOW, Color.MAGENTA, Color.LTGRAY, Color.GREEN};
@@ -62,8 +62,8 @@ public class cSliderView extends View {
     private boolean bEnabled[];                                     //true in designmode
     private int nType[];                                     //180327 type of handle Diamond,rect,up,down
     private boolean bVisible[];                                     //170914  true in designmode
-    private Context mContext;
-    private TextView lblLbl;
+
+
 //      Descriptive texts
     private String sValueText[] = {"sValueText ","2","3","4"};             //String of current value
     public String[] sDescription ={"Description1","","",""};                    //A text shown next to slider
@@ -75,8 +75,12 @@ public class cSliderView extends View {
     /*_____________________________Public properties____________________________*/
     public boolean bDesignMode=true;        //170914 Will show and enable all handles, to allow interactive design.
     public boolean bLimit2Range=true;      //170914 Limit datainput to the sliders range
-    private boolean bLimit2Siblings[];
-    public int nHandleSize;                //Pixelsize of the handle
+    private boolean bLimit2Siblings[];          //Confine values between siblings
+    public int nHandleSize=0;                   //Handlesize Set in mSetSizes
+    private int nTextHeight=0;                  //Label height Set in mSetSizes
+    private int nTickTextHeight=0;              //Height of the tick texts set in mSetSizes
+    private int nTickMarkCount = 5;             //Number of tickmarks on the slider
+
 
     public cSliderView(Context context) {
         super(context);
@@ -129,6 +133,7 @@ public class cSliderView extends View {
             }
         }
          mSetHandles(kControls);
+        paintBorder.setStyle(Paint.Style.STROKE);
     }
 
     public void mSetHandles(int nNewNoOfHandles) {      //Initialize and set number of handles
@@ -139,7 +144,7 @@ public class cSliderView extends View {
         bVisible=new boolean[nNewNoOfHandles];		//170913 booleans determining user input capability
         bInitialized = false;      //Will redimension the controls asap
         for (int i = 0; i< kControls; i++) {
-            if (oHandle[i] == null) oHandle[i] = new cSliderHandle(this);
+            if (oHandle[i] == null) oHandle[i] = new cSliderHandle(this );
         }
  //       mSetAllValues(nValues);
     }
@@ -153,9 +158,29 @@ public class cSliderView extends View {
             canvasHeight =getMeasuredHeight();
             canvasWidth =getMeasuredWidth();
         }
-        margin=canvasHeight/4;
-        nHandleSize = canvasHeight/3;//size of the handle
+        mSetSizes();
    }
+
+    private void mSetSizes() {
+        //Scaling the slider according to nTextSize
+        nTextHeight= (int) (cKonst.nTextSize* nSliderSize);
+        margin= (int) (nTextHeight*0.75);
+        nTickTextHeight= (int) (nTextHeight*0.75);
+        ViewGroup.LayoutParams p = getLayoutParams();
+        nHandleSize = (int) (canvasHeight/2);//size of the handle
+//        nHandleSize=abs(oBar[3]-oBar[1]);                    //Width of the handle=bar height
+
+        if (p!=null) {
+            if (canvasHeight < 5 * nTextHeight) {
+                canvasHeight = 5 * nTextHeight;
+                if (bRotate)
+                    p.width = canvasHeight;
+                else
+                    p.height = canvasHeight;
+                this.setLayoutParams(p);
+            }
+        }
+    }
 
     private void mSetMargin(View v, int ml) {
         //Set margin runtime , thanks to SO https://stackoverflow.com/questions/4472429/change-the-right-margin-of-a-view-programmatically
@@ -184,13 +209,14 @@ public class cSliderView extends View {
 
     private void mDrawTexts(Canvas canvas) {       //Rewritten 170824 to place text by position parameter
         //  if (oTextPaint == null) return;          //In case this code is called before instancing
+        cGraphText.oTextPaint.setTextSize(nTextHeight);
         if (sValueText[nActiveIdx] == "") return;       //If no text return
         if (2* oHandle[nActiveIdx].getX() > canvasWidth)      //Place the value according to handle
             cGraphText.mTextDraw(sValueText[nActiveIdx], 7, canvas);
         else
             cGraphText.mTextDraw(sValueText[nActiveIdx], 9, canvas);
         if (sDescription[nActiveIdx]!="") {
-
+            cGraphText.oTextPaint.setTextSize((float) (nTextHeight));
             cGraphText.mTextDraw(sDescription[nActiveIdx],3,canvas);
         }
     }
@@ -200,50 +226,28 @@ public class cSliderView extends View {
         return val;
     }
 
-    public void mDrawTextSub(String sString, int pos,Canvas canvas) {  //170914  revised with bottom alignmnet and right
-        int pad = margin / 2;
-            //  placement   1,2,3 top left,mid,right. 4,5,6  mid left mid right 7,8,9   bottom-left,mid,right
-             int kLabelColor= Color.WHITE;        //Color of the label on the slider
-             int kLabelBackColor=Color.BLACK;
-
-            Rect textBounds=new Rect();
-            oTextPaint.getTextBounds(sString, 0, sString.length(), textBounds);  // Get size of sValueText.
-            float ypos =0;
-            float xpos = 0;
-            if ((pos==1)|(pos==4)|(pos==7))     //Left positions
-                xpos=margin;
-            if ((pos==3)|(pos==6)|(pos==9))     //Right positions
-                xpos=canvasWidth-textBounds.width()-margin;
-            if ((pos==1)|(pos==2)|(pos==3))     //Top positions
-                ypos =mY2C((int) (canvasHeight-textBounds.height()));//Correct ypos for the height of the text
-            if ((pos==7)|(pos==8)|(pos==9))     //Bottom positions
-                ypos =mY2C(textBounds.bottom);
-            oTextPaint.setColor(kLabelBackColor);    //Draw a background for the text
-            canvas.drawRect(xpos,ypos - textBounds.height(), xpos + textBounds.width()+2, ypos+1, oTextPaint);
-            oTextPaint.setColor(kLabelColor);
-            canvas.drawText(sString, xpos, ypos, oTextPaint);
-            cGraphText.oTextPaint=oTextPaint;
-        }
 
     private int mY2C(int y){  //Transform y rotated views coordinates
         return canvasHeight -y;
     }
-    void mTest(Canvas canvas) {            //Tests
-        paintBorder.setStrokeWidth(1);
-        paintBorder.setColor(RED);
-        canvas.drawLine(margin,mY2C(0) ,oArea.right,mY2C(oArea.top),paintBorder);
-    }
     void mDrawMidline(Canvas canvas){
         //Midline
-//        paintBorder.setStrokeWidth(2);
-        canvas.drawRect(margin,mY2C(canvasHeight/2+1) ,oArea.right,mY2C(canvasHeight/2-1),paintBorder);
+//        paintBorder.setColor(RED);
+//        canvas.drawRect(margin,mY2C(canvasHeight/2+1) ,oArea.right,mY2C(canvasHeight/2-1),paintBorder);
+        int y = (int) (0.5*(oBar[1]+oBar[3]));  //Centerline of bar
+        canvas.drawRect(oBar[0],y-1,oBar[2],y+1,paintBorder);
+
+        canvas.drawRect(1,0 ,canvasWidth-1,canvasHeight-1,paintBorder); //Frame the control
+
     }
     private void mBorderTheArea(Canvas canvas) {    //Make a border around slider area
-        paintBorder.setStrokeWidth(3);
-        paintBorder.setColor(WHITE);
+        paintBorder.setStrokeWidth(1);
+        paintBorder.setColor(GREEN);
         paintBorder.setStyle(Paint.Style.STROKE);
-        canvas.drawRect(margin,mY2C(canvasHeight-margin) ,oArea.right,mY2C(margin),paintBorder);
-
+        canvas.drawRect(margin,oBar[3] ,oArea.right,oBar[1],paintBorder);
+        paintBorder.setColor(WHITE);
+        canvas.drawRect(1,mY2C(canvasHeight) ,canvasWidth,mY2C(1),paintBorder);
+        canvas.drawLine(0,0 ,canvasWidth,canvasHeight,paintBorder);
     }
 
     public void mRedraw() { //initialise data for oHandle , slider
@@ -254,28 +258,34 @@ public class cSliderView extends View {
          bInitialized = true;
         mGetCanvasProportions();
                //Area of the slider x1,y2,x2,y1   (Yes y2 is top,y1 bottom Rect is a mess)
-        oArea.set(margin, 2 * margin, canvasWidth - margin, canvasHeight - 2 * margin); //Left, top margin,right,bottom
+        oArea.set(3*margin, 2 * margin, canvasWidth - margin, canvasHeight - 2 * margin); //Left, top margin,right,bottom
         //Get number of thumbs Allocate objects  Initialize the intervals
         mTickMarks = mNewPaint(Color.WHITE);//the paint for the slider data(the values)
         mTickMarks.setAntiAlias(true);
         mTickMarks.setTextAlign(Paint.Align.CENTER);
-        mTickMarks.setTextSize(margin );
-
+        mTickMarks.setTextSize(nTickTextHeight );
+        oBar[0]=margin;                             //Left start of bar area
+        oBar[1]=mY2C(nTextHeight);                  //Value text below
+        oBar[2]=canvasWidth-  margin;                 //Right endpoint of bar area
+        oBar[3]=mY2C((int) (canvasHeight-2*nTextHeight-nTickTextHeight*0.75));       //Tick text and Description text above
         //rectangles that define the line between and outside of knob
         for (int i=0;i<mColorInterval.length;i++) { //From base to first
             oRect[i]= new Rect();
             oRect[i].left=canvasWidth-margin;
             oRect[i].left=margin;
-            oRect[i].bottom=mY2C(margin);
-            oRect[i].top=mY2C(canvasHeight-margin);
+            oRect[i].bottom=oBar[1];
+            oRect[i].top=oBar[3];
             sValueText[0]="CH "+canvasHeight;
         }
+        oArea.set(oBar[0],oBar[3],oBar[2],oBar[1]);
         int i;
         for (i = 0; i< kControls; i++) {
             //!-    oHandle[i] = new cSliderHandle(getContext(), R.drawable.knob);
             oHandle[i].setID(i);
             oHandle[i].mSetArea(oArea);
-            oHandle[i].setY(oArea.centerY());
+            //oHandle[i].setY(oArea.centerY());
+            oHandle[i].setY((int) (0.5*(oBar[1]+oBar[3])));
+
             oHandle[i].setColor(mColorHandle[i]);
             oHandle[i].nShape=nType[i];
         }
@@ -284,21 +294,21 @@ public class cSliderView extends View {
     }
 
     private void mDrawTickMarks(Canvas canvas) {
-        int divs = 5;
-        int py = margin;
-        for(int i=0;i<=divs;i++) {
-            int xmark =  (margin+(i*(oArea.width() )/divs));
-            canvas.drawText((nScaleMax *i/divs)+"", (float)xmark,
-                    py, mTickMarks);
+        for(int i=0;i<=nTickMarkCount;i++) {
+            float nX = nScaleMax * i / nTickMarkCount;
+            //int xmark =  (margin+(i*(oArea.width() )/divs));
+            int xmark =  oBar[0]+(i*(oBar[2]-oBar[0] )/nTickMarkCount);
             //Tickmarks
-            canvas.drawLine((float)(xmark), py,
-                    (float)(xmark), 2*py, mTickMarks);
+            canvas.drawLine((float)(xmark), oBar[3] -nTickTextHeight,(float)(xmark), oBar[3] + nTickTextHeight, mTickMarks);
+            mTickMarks.setTextSize(nTickTextHeight );
+            canvas.drawText(nX+"", (float)xmark,
+                    oBar[3]-nTickTextHeight, mTickMarks);
+            //Tickmarks
+            //canvas.drawLine((float)(xmark), py,                    (float)(xmark), 2*py, mTickMarks);
         }
 
     }
-    private void mSetHeight(Rect oArea, int newHeight) {    //Can be used to reduce height maintaining centre
-        oArea.set(oArea.left,oArea.centerY()-newHeight/2,oArea.right,oArea.centerY()+newHeight/2);
-    }
+
 
     private Paint mNewPaint(int color) {
         Paint oNewPaint = new Paint();//the paint between oHandle
@@ -327,11 +337,12 @@ public class cSliderView extends View {
             //Touch drag with the knob
             case MotionEvent.ACTION_MOVE:
                 if ((bCanDrag)&(0<= nActiveIdx)){
-                    if ( mUIAction_CanMoveTo(X)){
+                    X= mSiblingLimited2(nActiveIdx,X);
+               //     if ( mUIAction_CanMoveTo(X)){
                         oHandle[nActiveIdx].setX(X);
                         eventValueChanged(mGetAllValues());
                         bChangedByUser =true;
-                    }
+                //    }
                 }
                 ret=true;
                 break;
@@ -346,6 +357,23 @@ public class cSliderView extends View {
         // Redraw the canvas
         if (ret)            invalidate();
         return ret;
+    }
+
+    private int mSiblingLimited2(int nActiveIdx, int nValue) {
+        if (bLimit2Siblings[nActiveIdx]) {   //Limit between siblibgs
+            if (0 < nActiveIdx){
+                if (bLimit2Siblings[nActiveIdx - 1])
+                    if (oHandle[nActiveIdx - 1].getX() > nValue){
+                        return oHandle[nActiveIdx - 1].getX();  //Cant go past previous
+                    }
+            }
+            if (nActiveIdx < kControls - 1)
+                if (bLimit2Siblings[nActiveIdx + 1])
+                    if (oHandle[nActiveIdx + 1].getX() < nValue){
+                        return oHandle[nActiveIdx + 1].getX();   //Cant go past next
+                }
+        }
+        return nValue;
     }
 
     private boolean mUIAction_CanMoveTo(int nValue) {     //Move the value from touch event
@@ -373,7 +401,8 @@ public class cSliderView extends View {
             idx = (idx + 1) % (kControls);
             if (oHandle[idx].bContains(x, y)) {
                 bCanDrag = true;
-                if (canFocus(idx)) {        //170914  Only enabled controls can be activated
+                if (canFocus(idx))            //180420 unsure if we want this
+                {        //170914  Only enabled controls can be activated
                     nActiveIdx = idx;
                     oFocusedSlider=this;
                     oFocusedHandle= oHandle[idx];
@@ -404,7 +433,7 @@ public class cSliderView extends View {
         invalidate();
     }
 
-    void mValueText(int i, String s) {
+    void mValueText(int i, String s) {      //Todo 180417 there may be a problem with unassigned value idx 4 being assign to all_flags
         sValueText[i]=s;
     }
 
@@ -436,16 +465,16 @@ public class cSliderView extends View {
         }
         mDrawTickMarks(oCanvas);
         mDrawTexts(oCanvas);
-        //Decorations
-//        mTest(canvas);
-//        mBorderTheArea(oCanvas);
-
+         //mBorderTheArea(oCanvas);     //For debugging
         if (bRotate)oCanvas.restore();
     }
 	public void mEnabled(int idx,boolean ena){		//Set user input enabled
 		bEnabled[idx]=ena;
-		bLimit2Siblings[idx]=ena;           //Limit enabled values to sibling values
+
 	}
+    public void mLimit2Siblings(int idx,boolean ena){		//Set user input enabled
+         bLimit2Siblings[idx]=ena;           //Limit enabled values to sibling values
+    }
     public void mSetIntervalColor(int nHandleIdx, int nColor) {
         mColorInterval[nHandleIdx]=nColor;
     }

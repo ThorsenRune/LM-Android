@@ -26,7 +26,7 @@ import static java.lang.Math.abs;
         public static boolean isScrollingBlocked = cFunk.mInt2Bool(mAppProps(cKonst.eAppProps.kBlockScrolling))  ;        //Blocks scrollveiws
         static boolean bLongPress=false;
         static boolean bDoubleTap=false;
-        static boolean bFling;
+        public static boolean bFling;
         static boolean bSingleTap=false;
         static boolean bScrolling=false;
         static int nSignalPaneHeight=2;
@@ -40,7 +40,7 @@ import static java.lang.Math.abs;
         private ScaleGestureDetector oScale;
         private boolean bScaleBegin=false;
         private boolean retval;
-
+        private int kFlingThreshold=2000;           //180417    Threshold for the fling
 
         public cGestureListener(Context mContext){
             oScaleDetector = new ScaleGestureDetector(mContext, this);
@@ -143,6 +143,7 @@ import static java.lang.Math.abs;
                 cUInput.mSetFocus(myParent);
             } else if (myParent1 instanceof  cData_View)
                 cUInput.mSetFocus(myParent);
+
             //else             mErrMsg("Call not implemented");
 
             int a = event.getAction();
@@ -156,6 +157,7 @@ import static java.lang.Math.abs;
                     retval= true;
             return retval;
         }
+
 
 
         public boolean bLongPress() {           //Will clear the flag once tested
@@ -174,7 +176,10 @@ import static java.lang.Math.abs;
             boolean b=bFlingLR;bFlingLR=false;
             return b;
         }
-
+        public void mClear(){               //180417 Clear flags
+            bFling=false;
+            bFlingLR=false;
+        }
         public boolean bScaling() {
             boolean b=bScaling;bScaling=false;
             return b;
@@ -185,5 +190,15 @@ import static java.lang.Math.abs;
             boolean b=bDoubleTap;               //180403 just doubletab
             bDoubleTap=false;bLongPress=false;      //Clear
             return b;
+        }
+
+        public boolean bFlingDown() {
+            if (bFling){
+                if (nFlingDir[1]<-kFlingThreshold) {
+                    bFling=false;
+                    return true;
+                }
+            }
+            return false;
         }
     }

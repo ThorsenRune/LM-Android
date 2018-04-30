@@ -20,6 +20,9 @@ import android.widget.TextView;
 import static it.fdg.lm.cFunk.mInt2str;
 import static it.fdg.lm.cFunk.mStr2Int;
 
+import static it.fdg.lm.cProgram3.mGetViewProps;
+import static it.fdg.lm.cProgram3.oUInput;
+
 
 public class cData_View extends LinearLayout {
     private cElemViewProps _ElemViewProps =null;
@@ -28,10 +31,8 @@ public class cData_View extends LinearLayout {
     private Button lblElementName;
     public Context mContext;
     private TextView editValue;
-    //Not used , reserved for future use
-    private String myId1="D";
-    private int myIndex1=0;
 
+    private String myId1="D";       //The widget identifier
 
     public cData_View(Context context) {
         super(context);
@@ -69,12 +70,12 @@ public class cData_View extends LinearLayout {
 
     private void mEditValue() {
         cUInput.mSetFocus(_ElemViewProps);
-        cProgram3.oUInput.mInputValue1();
+        oUInput.mInputValue1();
     }
 
     private void mSelectElement() {
-        cUInput.mSetFocus(this);       //180103 but it should be handled by the central handler
-        cUInput.mInputViewSettings1(true);
+        oUInput.mSetFocus(this);       //180103 but it should be handled by the central handler
+        //oUInput.mInputViewSettings1(true);
     }
 
     private void mInputHandler(final EditText editValue) {
@@ -109,6 +110,7 @@ public class cData_View extends LinearLayout {
     }       //Refresh the control (or full redraw)
 
     private void mRedraw() {
+        _ElemViewProps= mGetViewProps(this,myId1);       //Get the associated element view
         _ElemViewProps.mUpdate(this);
         if (_ElemViewProps.bVisible()) {
             lblElementName.setText(_ElemViewProps.mGetName());
@@ -117,7 +119,7 @@ public class cData_View extends LinearLayout {
 
     public void mInit(Context oOwner, String sId) {
         mContext =oOwner;
-
+        myId1=sId;
     }
 
     public int mRawValue() {

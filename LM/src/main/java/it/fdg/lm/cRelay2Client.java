@@ -128,7 +128,7 @@ public class cRelay2Client {
 
                 } catch (IOException e) {
                     mStateSet(cKonst.eSerial.kBT_TimeOut);
-                    mMsgLog("Error Stopped listening"+e.toString());
+                    mMsgLog(9,"Error Stopped listening"+e.toString());
                 }
             if (oSocketServer ==null) return;
             try {

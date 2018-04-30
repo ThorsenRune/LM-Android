@@ -1,4 +1,4 @@
-//Rev 170911
+//Rev 180416
 //folder: https://drive.google.com/drive/u/0/folders/0B5pCUAt6BabuU1I1Ri1zNzA4SG8
 //Doc: https://docs.google.com/document/d/1bh_dFb6dHkwnqtpGCbxZGD-_I13O3U4J3LiUjvM5ARw/edit
 package it.fdg.lm;
@@ -13,6 +13,8 @@ import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 
+import static java.lang.Math.abs;
+
 public class cSliderHandle {
 	private Paint oPaintBorder =new Paint();
 	private Paint oPaintHandle= new Paint();//the paint of the handle
@@ -23,10 +25,11 @@ public class cSliderHandle {
 
 	private Rect oCanvasArea;
 	private cSliderView oParent;
-	private int nHandleSize;		//Size of the control handle
-	public int nShape=0;
-	public static String sShape="Butterfly,Rectangle,Tri Up, Tri Down,Diamond";
 
+	public int nShape=0;
+	public static String sTypeList ="Butterfly,Rectangle,Begin,End,Diamond";
+	private int nHandleWidth=10;
+	private int nHandleHeight=10;
 
 	//**************************			INITIALIZATIONS   ***********************
 	public cSliderHandle(cSliderView oSliderView) {
@@ -97,33 +100,32 @@ public class cSliderHandle {
 				setX(0);                            //Limit lower bound
 
         //canvas.drawBitmap(this.getBitmap(), this.getX()-radiusKnob, this.getY()-radiusKnob, null);
- 			Path path = new Path();
-			float nHeight = nHandleSize;
-			int size = 5;
-
+		Path path = new Path();
+		nHandleHeight = (int) abs(oParent.nHandleSize*0.5);
+		nHandleWidth = nHandleHeight;
 		if (nShape==0){ //Butterfly
-			path.moveTo(size,-nHandleSize);
-			path.lineTo(-size,-nHandleSize);
-			path.lineTo(size,+nHandleSize);
-			path.lineTo(-size,nHandleSize);
+			path.moveTo(nHandleWidth,-this.nHandleHeight);
+			path.lineTo(-nHandleWidth,-this.nHandleHeight);
+			path.lineTo(nHandleWidth,+this.nHandleHeight);
+			path.lineTo(-nHandleWidth, this.nHandleHeight);
 		} else 		if (nShape==1){//Rectangle
-			path.moveTo(-size,-nHandleSize);
-			path.lineTo(size,-nHandleSize);
-			path.lineTo(size,+nHandleSize);
-			path.lineTo(-size,nHandleSize);
+			path.moveTo(-nHandleWidth,-this.nHandleHeight);
+			path.lineTo(nHandleWidth,-this.nHandleHeight);
+			path.lineTo(nHandleWidth,+this.nHandleHeight);
+			path.lineTo(-nHandleWidth, this.nHandleHeight);
 		} else if (nShape==2){//Triangle up
-				path.moveTo(-nHeight,-nHandleSize);
+				path.moveTo(-nHandleHeight,-this.nHandleHeight);
 				path.lineTo(0,0);
-				path.lineTo(-nHeight,nHandleSize);
+				path.lineTo(-nHandleHeight, this.nHandleHeight);
 			} else if (nShape==3){//Triangle down
-				path.moveTo(nHeight,-nHandleSize);
+				path.moveTo(nHandleWidth,-this.nHandleHeight);
 				path.lineTo(0,0);
-				path.lineTo(nHeight,nHandleSize);
+				path.lineTo(nHandleWidth, this.nHandleHeight);
 			} else  if (nShape==4){ //Diamond
-				path.moveTo(-nHeight,0);
-				path.lineTo(0,nHandleSize);
-				path.lineTo(nHeight,0);
-				path.lineTo(0,-nHandleSize);
+				path.moveTo(-nHandleWidth,0);
+				path.lineTo(0, this.nHandleHeight);
+				path.lineTo(nHandleWidth,0);
+				path.lineTo(0,-this.nHandleHeight);
 			}
 			path.offset(coordX,coordY);
 			path.close();
@@ -136,9 +138,9 @@ public class cSliderHandle {
 	}
 
 	public boolean bContains(int x, int y) {
-		if (x<(coordX- nHandleSize))    //Out of left
+		if (x<(coordX- nHandleWidth))    //Out of left
 			return false;
-		else if ((coordX+ nHandleSize)<x)    //Out of right
+		else if ((coordX+ nHandleWidth)<x)    //Out of right
 			return false;
 		else   // 07/09/2017  implement y check
 			return true;
@@ -159,6 +161,5 @@ public class cSliderHandle {
 	public void setColor(int color) {
 		oPaintHandle.setColor( color);
 		oPaintHandle.setStyle(Paint.Style.FILL);
-		nHandleSize= oParent.nHandleSize;
 	}
 }

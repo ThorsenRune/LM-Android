@@ -61,6 +61,7 @@ public class cGraphText extends Application {       //This should handle text gr
         int kLabelColor= Color.WHITE;        //Color of the label on the slider
         Rect textBounds=new Rect();
         oTextPaint.getTextBounds(sString, 0, sString.length(), textBounds);  // Get size of sValueText.
+
         float ypos =0;
         float xpos = 0;
         if ((pos==1)|(pos==4)|(pos==7))     //Left positions
@@ -68,7 +69,7 @@ public class cGraphText extends Application {       //This should handle text gr
         if ((pos==3)|(pos==6)|(pos==9))     //Right positions
             xpos = canvasWidth - textBounds.width() - margin;
         if ((pos==1)|(pos==2)|(pos==3))     //Top positions
-            ypos =textBounds.height();//Correct ypos for the height of the text
+            ypos = (float) ( textBounds.height());//Correct ypos for the height of the text
         if ((pos==7)|(pos==8)|(pos==9))     //Bottom positions
             ypos =canvasHeight;
         oTextPaint.setColor(nBackColor);    //Draw a background for the text

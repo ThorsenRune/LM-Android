@@ -233,4 +233,21 @@ public final class cFunk {
         long y1 = (y0 * alfa + x * (1000 - alfa)) / 1000;
         return (int) y1;
     }
+
+    static int nBitMask(int bits, int n, boolean checked){  //Sets or clears a bit
+        if (checked)
+            return (int) (bits |(1L << n));
+        else
+            return (int) (bits & ~(1L << n));
+    }
+
+    public static String[] mStripFromList(String[] src, String[] sNot) {
+        for (int i = 0; i < src.length; i++)
+        for (int j = 0; j < sNot.length; j++) {
+            if (mTextLike(src[i],sNot[j])) {
+                src[i]="";
+            }
+        }
+        return src;
+    }
 }

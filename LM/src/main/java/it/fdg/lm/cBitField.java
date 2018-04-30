@@ -13,7 +13,8 @@ import static it.fdg.lm.cAndMeth.mSetVisibility;
 import static it.fdg.lm.cFunk.mInt2str;
 import static it.fdg.lm.cFunk.mStr2Int;
 import static it.fdg.lm.cProgram3.bAdmin;
-import static it.fdg.lm.cProgram3.getElementViewById;
+
+import static it.fdg.lm.cProgram3.mGetViewProps;
 import static it.fdg.lm.cProgram3.oUInput;
 
 public class cBitField extends BaseActivity {
@@ -25,6 +26,8 @@ public class cBitField extends BaseActivity {
     private static final int MENU3 = 1;
     private String myId1="B0";
     private int myIndex=0;
+    private cData_View oDV;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +35,9 @@ public class cBitField extends BaseActivity {
         bitlayout = (LinearLayout)findViewById(R.id.linlay4);
         myDataView= (cData_View) findViewById(R.id.idDataValue2);
         myDataView.mInit(this,myId1);
+        oUInput.mSetFocus( myDataView);
+        oDV= (cData_View) findViewById(R.id.idDataValue3);
+        oDV.mInit(this,"B1");
         mMakeBitFields();               //make the layout
         cProgram3.bDoRedraw=true;
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);//hIDE THE KEYBOARD ON STARTUP OF ACTIVITY
@@ -88,6 +94,8 @@ public class cBitField extends BaseActivity {
                 else if (v instanceof TextView)
                     if (cProgram3.bDesignMode())
                         mEditBitDesc(mStr2Int(v.getTag().toString()));
+                    else
+                        mBitSetClick(button);
             }
         };
     }
@@ -103,13 +111,10 @@ public class cBitField extends BaseActivity {
 
     void mBitSetClick(View button){
         String msg = button.getTag().toString();
+        int idx=0;
         int myValue=mRawValue();
-        if (button instanceof CheckBox){
-            Integer i = Integer.valueOf( button.getTag().toString());
-            myValue=(myValue|(1<<i));
-            if (((CheckBox)button).isChecked()==false)
-                myValue=(myValue^(1<<i));   //Clear the bit
-        }
+            idx= mStr2Int(button.getTag().toString());
+            myValue=(myValue^(1<<idx));   //XOR the bit
         mRawValue(myValue);     //Set the controls value
         mRefresh(false);
     }
@@ -117,7 +122,6 @@ public class cBitField extends BaseActivity {
 
     //*******************************  END CLICK MANAGEMENT***********************
     public void mBitListSet(int myValue) {
-        if(myValue<0) return;
         for(int i = 0 ; i<32 ; i++)
         {
             cb[i].setChecked(((myValue & (1<<i))!=0));
@@ -142,10 +146,12 @@ public class cBitField extends BaseActivity {
 
     public void mRedraw(){
         myId1="B"+(myIndex);
-        myDataView.mElemViewProps(getElementViewById(myId1));
+        myDataView.mElemViewProps(mGetViewProps(myDataView,myId1));
+        oDV.mRefresh(true);
+
         for(int i = 0 ; i<32 ; i++)
         {
-            mSetVisibility(cb[i],mBitVisible(i));
+            mSetVisibility(cb[i],mBitVisible(i));       //Will always show in design mode
             mSetVisibility(lbl[i],mBitVisible(i));
             lbl[i].setText(mInt2str(i)+"_"+mBitName(i));
         }
@@ -160,6 +166,8 @@ public class cBitField extends BaseActivity {
         if (myDataView!=null) {
             myDataView.mRefresh(doRedraw);
         }
+        if (oDV!=null)
+            oDV.mRefresh(doRedraw);
         isBusy=false;
     }
 
@@ -178,13 +186,14 @@ public class cBitField extends BaseActivity {
 
 
     public boolean mMenuAction_bf(Menu myMenu, int nId) {
-        if (mnuClick(nId, "Set Value", cUInput.mSelected())) {
+        if (mnuClick(nId, "Set Value", oUInput.mSelected())) {
             oUInput.mInputValue1();
         }
 
         if (bAdmin()) {            ;       //170728    Advanced permissions
-            if (mnuClick(nId, "Control:"+ cUInput.oCtrlID(), cUInput.mSelected())) {
-                cUInput.mInputViewSettings1(true); //Associate element with widget
+            if (mnuClick(nId, "Control:"+ oUInput.oCtrlID(), oUInput.mSelected())) {
+                oUInput.mEditControl2(); //Associate element with widget
+           //     cUInput.mInputViewSettings1(true); //Associate element with widget
             }
         }
         myMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "______________________________________").setEnabled(false);

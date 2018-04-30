@@ -42,6 +42,8 @@ public class cProtElem {
     private int[] nBitVisible=new int[32];
     private int myIndex=0;
     private cProtElem oLinkDest;    //Relay data to anoter ProtElement
+    public boolean bWriteOnReset=false;     //If data will be set in device from app on a protocol reset
+
     public int mBackColor(int myProtDataIdx) {
         return mPalIdx2Col(mColorIndex(myProtDataIdx, 1));
     }
@@ -57,7 +59,11 @@ public class cProtElem {
 
     //  End 170529
 
-
+    public void mCentreAround(float offset){
+        float d = (float) (0.5 * (nDisplayRange[0] + nDisplayRange[1]));
+        nDisplayRange[0]=nDisplayRange[0]-d+offset;
+        nDisplayRange[1]=nDisplayRange[1]-d+offset;
+    }
     public cProtElem(cProtocol3 parentProtocol) {
         oProtocol =parentProtocol;
         mInit2();
@@ -89,6 +95,7 @@ public class cProtElem {
         nColors[0] = mPrefs5(bGet,sMyKey+".Color1", nColors[0]);    //Fore back color indexes
         nColors[1] = mPrefs5(bGet,sMyKey+".Color2", nColors[1]);    //Fore back color indexes
         nProperties = mPrefs5(bGet,sMyKey+".Properties",nProperties);
+        bWriteOnReset = mPrefs5(bGet,sMyKey+".bWriteOnReset",bWriteOnReset);
         sLinkVarName = mPrefs5(bGet,sMyKey+".RelayTo",sLinkVarName );   //R171130
         aData= mPrefs5(bGet,sMyKey+".Data",aData);
         if (mIsBitField()||(bGet)) {        //Do only save real bitfields
@@ -107,8 +114,10 @@ public class cProtElem {
         if (idx<aData.length)
              return (float)(mDataRead(idx)-nOffset)/ nFactor;            //Convert integer to units
         //Catch errors
-        mErrMsg("Index fault in "+ sProtName()+":"+sVarName);
-        nDataLength(idx);
+        if (myProtocol().getState()== cKonst.eProtState.kProtReady)
+            mErrMsg("Index fault in "+ sProtName()+":"+sVarName);
+        myProtocol().mStateSet(cKonst.eProtState.kProtError);
+        nDataLength(idx+1);
         return 0;
     }
 
@@ -178,8 +187,7 @@ public class cProtElem {
     }
 
     public String mGetValueText(int indexOfDataArray) {
-        if (myVarId<0)
-            return sVarName;
+        //if (myVarId<0)            return sVarName; //180417 question: why did we want to return the name rather than the value if not connected
         if (mIsInt())       //Format as integer
             return  getVal(indexOfDataArray)+" "+getUnits();
         return String.format("%.1f ", getVal(indexOfDataArray))+getUnits();
@@ -205,7 +213,7 @@ public class cProtElem {
     }
     public String mBitName(int i){      //170727    return the description of the bit
         if (sBitNames.length<=i)
-            return "Error 170904";
+            return "Undefined";
         if (sBitNames[i]==null)
             return "Error 170904B";
         if (sBitNames[i]=="null")

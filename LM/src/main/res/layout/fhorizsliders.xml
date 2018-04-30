@@ -3,7 +3,6 @@
     android:id="@+id/idContainer4HorizontalSliders"
         android:layout_width="wrap_content"
         android:orientation="vertical"
-        android:layout_weight="3"
         android:background="@drawable/backborder"
         android:layout_height="wrap_content">
         <!-- Horizontal slider pane-->

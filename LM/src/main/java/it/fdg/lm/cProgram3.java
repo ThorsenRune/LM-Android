@@ -17,51 +17,60 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static it.fdg.lm.cAndMeth.mSetVisibility;
-import static it.fdg.lm.cDebug.nTestCount;
+import static it.fdg.lm.cAndMeth.mSleep;
 import static it.fdg.lm.cFileSystem.mPersistHex;
 import static it.fdg.lm.cFileSystem.mPrefFileNameSet;
+import static it.fdg.lm.cFileSystem.mPref_Clear;
 import static it.fdg.lm.cFileSystem.mPrefs5;
+import static it.fdg.lm.cFileSystem.mStr2Pref;
 import static it.fdg.lm.cFunk.mArrayFind;
 import static it.fdg.lm.cFunk.mArrayRedim;
 import static it.fdg.lm.cFunk.mLimit;
 import static it.fdg.lm.cFunk.mTextLike;
 import static it.fdg.lm.cKonst.eAppProps.kAutoConnect;
 import static it.fdg.lm.cKonst.eAppProps.kZoomEnable;
-import static it.fdg.lm.cKonst.kUserAdmin;
 import static it.fdg.lm.cKonst.nAppProps;
 
 
 
 public final class cProgram3 {
     public static Context mContext;         //This instance
-	private static cElemViewProps[] oaElementViews= new cElemViewProps[100];
-    public static cSlider[] oSlider=new cSlider[20]  ;               //Slider widget controls 10 vertical and 10 horizontal
+	private static cElemViewProps[] oaElementViews;    //
+    public static cSlider[] oSlider;               //Slider widget controls 10 vertical and 10 horizontal
+    private static int nTestCount=0;
     public static cSignalView2 mySignal;        //The current signal view
     //Properties of the application
-
     public static BluetoothDevice[] oPairedDevices;
     public static Typeface oTextTypeface;
-    private static String sMsgQueue="";
     public static boolean bDoRefresh=false;
-    public static String sMsgLog="";          //String containin a all messages
     public static cGraphText oGraphText;
     private static Timer oTimer=new Timer();
-    private static String[] sFileList;
     public static int mLoopTime;
     private static int _RefreshRate;            //Refresh rate of the screen and communication protocol
     private static int _Privileges;
     private static boolean _DesignMode;
     public static String sConnectStatus ="";    //todo 180308
-    public static cUInput oUInput=new cUInput();
-    public static boolean bDoSavePersistent;
+    public static cUInput oUInput;
+    public static boolean bDoSavePersistent=false;  //Flag that data has changed and should be saved on exit
+    public static int nMsgVerboseLevel=5;  //How many messages are shown
 
+    public static int nPanelSizes[]={2,1,1,1,0};              //Weights of the panels
+    public static boolean bPanelData;
+    public static boolean bWriteOnReset=false;   //r180420 Write to device on init flag bWriteOnReset
+    private static String sMsgLog="";           //Log of messages
+
+    public static String sFileName_Help="help";
+
+    public static void mInit(Context ctx) {     //Initializations
+        oSlider = new cSlider[20];
+        oUInput = new cUInput(ctx);
+    }
 
     //SGetter for refresh rates
     public static void nRefreshRate(int i) {        //Adjust communication speed
         i=mLimit(60,i,1000);
         _RefreshRate=i;
-        mMsgLog("New refresh rate " +i);
+        mMsgLog(10,"New refresh rate " +i);
     }
     public  static int nRefreshRate(){return _RefreshRate;}
     //Other application properties
@@ -100,24 +109,20 @@ public final class cProgram3 {
     public static int nWatchPage=0;
     public static int nSignalPage=0;
     private static String[] sWidgetIds={"W0"};
-    private static String[] sBitViews;
     static cGestureListener oGlobalGestureDetector;   //170915
-
-    public static float nSliderZoom=1f;
+    public static float nSliderSize =1.2f;           //Size of the sliders
 //  Protocol for devices
 // public static SignalBase oSignalBase
     public static cProtocol3[] oaProtocols;
     public static String[] sDevices2={};           //Protocol names
-    public static boolean bShowElemNameOnSlider=true;
     private static Handler handler= new Handler();
-
     public static boolean bDoRedraw;        //Request a redraw of visible screen
-    private static boolean bRunning1=false;  //Flag the running state
+    public static boolean bRunning2=false;  //Flag the running state
     public static Object oFocusdActivity ;      //Currently focused activity
     public static String sFile_ProtCfg ="";
-    public static String sFile_AppCfg ="lm_config";
+    public static String sFile_AppCfg ="config";
     public static String[] sProtDesc={"Revision","Description","Remark"};
-    private static long nStartTime;
+    private static long nStartTime=System.currentTimeMillis();
 
     //--------------------------------- MAIN METHODS------------------------------
     //          PROPERTIES
@@ -137,6 +142,7 @@ public final class cProgram3 {
     }
     public static void mPrivileges(int i) {
         _Privileges=i;
+        nMsgVerboseLevel=i+1;
         bDoRedraw=true;
     }
 
@@ -146,42 +152,51 @@ public final class cProgram3 {
 
     //          METHODS
     protected static void mCommunicate(boolean bRun) {       //Avoid that this is called multiple times
-        if (bRunning1==bRun)    //No change, will assure only one thread
-            mMsgLog("Already running mCommunicate");
+        if (oaProtocols==null) return;  //Wait until protocol is ready
+        if (bRun==false) {             //Shut down processing
+            bRunning2 = false;
+            mSleep(2000);
+        }
+        else if (bRunning2==bRun) {    //No change, will assure only one thread
+            mMsgLog(8, "mCommunicate is running");
+        }
         else if (bRun) {
-            bRunning1=true;
+            bRunning2=true;
             mPeriodicProcessing.run();      //Start the timer
             oTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    nStartTime = System.currentTimeMillis();
-                    nTestCount[1]++;
+                    nStartTime = mNowMs();
                     Thread.currentThread().setName("Prot_Async");
                     if (oaProtocols!=null)
                     for (int i = 0; i <oaProtocols.length ; i++) {//180103 index fix
                         if (oaProtocols[i] != null) oaProtocols[i].mProcess_Async();    //Non gui
                     }
                     mLoopTime =cFunk.mAverage(mLoopTime, (System.currentTimeMillis() - nStartTime));
-                    if (bRunning1 == false) {
+                    if (bRunning2 == false) {
                         this.cancel();
                     }
                 }
             }, 1000, nRefreshRate());
         } else {
-            bRunning1=false;
+            bRunning2=false;
+            oTimer.cancel();
             mMessage("Not running");
         }
     }       //set Run/Pause of device communication
 
+    public static long mNowMs() {
+        return System.currentTimeMillis()-nStartTime;
+    }
+
     private static Runnable mPeriodicProcessing = new Runnable() {
         @Override
         public void run() {
-            if (bRunning1) mPeriodicProcessingExec();
+            if (bRunning2) mPeriodicProcessingExec();
         }
-
         private void mPeriodicProcessingExec() {                    //This will repeat itself
             cProgram3.mMainProcess1();
-            if (bRunning1)
+            if (bRunning2)
                 handler.postDelayed(this, nRefreshRate());//Set timer for next call of this process
             else
                 mMessage("Stopped");
@@ -193,8 +208,7 @@ public final class cProgram3 {
     }
 
     public static boolean mMainProcess1() {
-        nTestCount[0]++;
-        //mMsgStatus(     "M:"+nTestCount[0]+"D:"+nTestCount[1]);
+        if (bRunning2==false) return false ;
         if (bDoRefresh|bDoRedraw) {
             fMain.mRefresh_DispMain(bDoRedraw);       //Syncrhornize display update with async process
             bDoRedraw=false;    //Redrawing done
@@ -204,21 +218,23 @@ public final class cProgram3 {
     }    //  Main process for device communication entry
 
     public static void mEndProgram(){    //Shut down gracefully    */
+        mAlert2("Shutting down");
+        mCommunicate(false);  //Stop communication
+        if (cProgram3.bDoSavePersistent)  {
+            mPersistAllData(false,sFile_ProtCfg);//Save data if dirty 180417
+        }
         mAppSettings(false);
         if (            oaProtocols==null) return;
         for (int i = 0; i< oaProtocols.length; i++){        //For each device
             oaProtocols[i].mEnd();                          //Close bluetooth ports
-            oaProtocols[i]=null;
         }
-        oaProtocols=null;
-        // mDefault4App(true);
-    }           //(Meagre)   Gracefully shut down the application
+    }
 
 
 //  *******************************Settings management*********************
 public static void mAppSettings(boolean bGet) {
     // Persistent data for the application. Get/Set current values to static storage
-    mMessage("App settings:"+ sFile_AppCfg);
+    mMsgLog("App settings:"+ sFile_AppCfg);
     int nKeys = mPrefFileNameSet(sFile_AppCfg);
     if (nKeys<1) {    //File not exising
         mMessage("Reading factory settings for :"+ sFile_AppCfg);
@@ -228,13 +244,18 @@ public static void mAppSettings(boolean bGet) {
     //   A: Application settings 170825
     //Viewing
     nPalette =mPersistHex(bGet,"Palette", nPalette);   //Color palette for controls
-    nSliderZoom= mPrefs5(bGet, "SliderSize", nSliderZoom);   //Reduction factor for views
+    nSliderSize = mPrefs5(bGet, "SliderSize", nSliderSize);   //Reduction factor for views
     _Privileges = mPrefs5(bGet,"Privileges", _Privileges);   //Permissions of the user
     nAppProps= mPrefs5(bGet,"Properties",nAppProps);   //Permissions of the user
     nRefreshRate( mPrefs5(bGet,"RefreshRate", nRefreshRate()));   //Permissions of the user
     _DesignMode= ( mPrefs5(bGet,"DesignMode", _DesignMode));   //Permissions of the user
     sFile_ProtCfg =mPrefs5(bGet,"CurrentProtocolFile", sFile_ProtCfg);
+    nMsgVerboseLevel=mPrefs5(bGet,"MsgVerboseLevel", nMsgVerboseLevel);
 }
+
+    public static void mMsgLog(String s) {
+        mMsgLog(2,s);
+    }
 
 
     public static void mPersistAllData (boolean bGet,String sProtocolConfigFile){
@@ -248,49 +269,63 @@ public static void mAppSettings(boolean bGet) {
         sWidgetIds = mPrefs5(bGet,"Widgets", mGetListOfControls());   //IDs for widgets used (S# signal W# slider B# biteditor, # index
         sDevices2 = mPrefs5(bGet,"Devices", sDevices2);   //Device names (protocol names)  170823
         if (bGet)mProtocolPrepare(sDevices2.length);
+        if (oaProtocols==null) return;  //If program is shutting down
         for (int i = 0; i< oaProtocols.length; i++) {
           oaProtocols[i].mSettings(bGet);      //Load settings for each protocol
         }
         //Load/save    View settings
+        if (bGet) oaElementViews= new cElemViewProps[100];
         for (int i = 0; i < sWidgetIds.length; i++){       //170823 revised with a list of used widgets
-            cElemViewProps oa = getElementViewById(sWidgetIds[i]);
+            cElemViewProps oa = mGetViewProps(null,sWidgetIds[i]);
             oa.mViewSettings3(bGet,sWidgetIds[i]);
         }
+        //  GUI Visibility Settings
+
+        bPanelData=mPrefs5(bGet,"bPanelData", bPanelData);
+
+        nPanelSizes=mPrefs5(bGet,"nPanelSizes", nPanelSizes);   //Sizes of the panels
+
+        bWriteOnReset=mPrefs5(bGet,"WriteOnReset", bWriteOnReset);
         cProgram3.bDoSavePersistent=false;      //Clear the save persistent flag
   }             //Save/Load settings from persistent storage
 
 
+
+
     //          MESSAGES
     public static void mMessage(String msg){
-        mMsgLog(msg);
-        mMsgStatus(msg);
-        if (nUserLevel1(kUserAdmin))
-            mAlert1(msg);
+        mWaitMsg(msg,1000);
     }
 
 
 
-    static void mMsgLog(String msg){        //Adds message to a log
-        if (mPrivileges()>0)
-            sMsgLog =sMsgLog+ msg+'\n';
+    static void mMsgLog(int nVerbosity,String msg){        //Adds message to a log
+        if (mPrivileges()<1) return;
+        mMsgLogAdd(msg);
+        if (nVerbosity<nMsgVerboseLevel) oUInput.mMessage(msg,0);
+    }
+
+    private static void mMsgLogAdd(String msg) {
+        int k = 1000;
+        sMsgLog=sMsgLog+"\n"+msg;
+        int l=sMsgLog.length();
+        if (l>k)
+            sMsgLog=sMsgLog.substring(l-k,l);
     }
 
     public static void mErrMsg(String msg) {
-        mMsgLog(msg);
-        mAlert1(msg);
-        bDoRedraw=true;
+        mMsgLog(0,msg);
     }
 
-    public static void mMsgStatus(String msg){      //Display current status of protocol
+    public static void mCommandTxt(String msg){      //Display current status of protocol
+        mMsgLog(10,msg);
         fMain.cmdText(msg);
-        mMsgLog(msg);
         bDoRefresh=true;
     }
     public static void mMsgDebug(String msg){      //Display current status of protocol
-        mMsgLog(msg);
-        if (nUserLevel1(cKonst.bitmask.kDebug)) mMessage(msg);
+        mMsgLog(8,msg);
     }
-    static void mAlert1(final String msg){
+    static void mAlert2(final String msg){
         if (msg.length()<3) return;
         Handler handler = new Handler(Looper.getMainLooper());
         handler.post(new Runnable() {
@@ -305,6 +340,7 @@ public static void mAppSettings(boolean bGet) {
 
 
     private static String[] mGetListOfControls() {     //Return a string array of
+        if (oaElementViews==null) return new String[]{""};
         ArrayList<String> lst = new ArrayList<String>();
         for (int i = 0; i<oaElementViews.length; i++){
             if (oaElementViews[i]!=null)
@@ -325,21 +361,21 @@ public static void mAppSettings(boolean bGet) {
         }
     }
 
-    public static cElemViewProps getElementViewById(String sId) {       //170727 return a valid static EV object by ID
-        int idx=0;
-        for (int i = 0; i<oaElementViews.length; i++){
-                if (oaElementViews[i]==null) {
-                    idx = i;
-                    break;
-                } else if (cFunk.mTextLike(oaElementViews[i].myId1,sId)){
-                    idx = i;
-                    break;
-                }
+    public static cElemViewProps mGetViewProps(View view, String sId) {       //180424 link elementview to view
+        int idx=0;      //First is a dummy null element
+        for (int i = 1; i<oaElementViews.length; i++){
+            if (oaElementViews[i]==null) {
+                oaElementViews[i]=new cElemViewProps(sId);     //Create non registered views
+                oaElementViews[i].myView=view;
+                return oaElementViews [i];
+            } else if (cFunk.mTextLike(oaElementViews[i].myId1,sId)){
+                    oaElementViews[i].myView=view;
+                    return oaElementViews[i];
             }
+        }
         if (oaElementViews [idx]==null){
-            cElemViewProps oa = new cElemViewProps();
+            cElemViewProps oa = new cElemViewProps(sId);
             oa.myId1=sId;
-            oaElementViews [idx]=oa;
             int j = mArrayFind(sWidgetIds, sId);
             if (j<0) {      //170904    Add the ID to widget id only if visible or placeholder
                 if (oa.bVisible()) {
@@ -351,13 +387,11 @@ public static void mAppSettings(boolean bGet) {
         return oaElementViews[idx];
     }
 
-    public static cElemViewProps[] oControls() {
+    public static cElemViewProps[] oaWidgetList() {
         return oaElementViews;
     }   //Return element views
 
-    public static void mRedraw0() {  //// Redraw displays
-        fMain.mRefresh_DispMain(true);     //principal redraw
-    }
+
 
     public static int mPalIdx2Col(int nPalIdx) {     //Compress color
         if (nPalIdx>=nPalette.length)nPalIdx=0;
@@ -381,7 +415,7 @@ public static void mAppSettings(boolean bGet) {
     public static void oControls_Add(View v, String sId) {
         int i=oControlsCount();
 //        oaElementViews[i]= new cElemViewProps();
-        cElemViewProps oa = getElementViewById(sId);     //Get or make oaElementViews[i]
+        cElemViewProps oa = mGetViewProps(v,sId);     //Get or make oaElementViews[i]
         oa.myId1=sId;
         oa.myView=v;
         ((cData_View) v).mElemViewProps(oa);
@@ -396,22 +430,23 @@ public static void mAppSettings(boolean bGet) {
 
     public static void mControlsRefresh(boolean doRedraw) {
         for (int i = 0; i<oaElementViews.length; i++) {
-            if (oaElementViews[i] == null) break;
+            if (oaElementViews[i] == null) return;
             oaElementViews[i].mRefresh( doRedraw);
         }
-
     }
 
 
 
     public static cProtElem mElementByName(String protName, String elemName) {
         int i = nProtocol_IdxByName(protName);
-        if (i<0){                      return null;}
+        if (i<0){
+            return null;}
         cProtElem e = oaProtocols[i].mGetElemByName(elemName);
         return e;
     }
 
     private static int nProtocol_IdxByName(String protName) {
+        if (oaProtocols==null) return -1;
         for (int i = 0; i <oaProtocols.length ; i++) {
             if (mTextLike( oaProtocols[i].sProtName(),protName))
                 return i;
@@ -419,15 +454,33 @@ public static void mAppSettings(boolean bGet) {
         return 0;
         }
 
-
-    public static boolean mShowData() {
-        return mAppProps(cKonst.eAppProps.kShowDataPanel)==1;
-
+    public static void mLoadFactorySettings(String sFileName) {
+        String s = cFileSystem.mFileRead_Raw(sFileName);
+        mPref_Clear();            //Remove old preferences
+        mStr2Pref(sFileName,s);                      //Transfer to preferences
+        mPersistAllData(true,sFileName);  //Load setup
+        mAppSettings(false);
     }
 
-    public static void mShowData(boolean b) {
-        if (b) mAppPropsSet(cKonst.eAppProps.kShowDataPanel,1);
-        else mAppPropsSet(cKonst.eAppProps.kShowDataPanel,0);
-        mSetVisibility( fMain.fPanelData,b);
+    public static void mWaitMsg(String msg,int nTimeOut) {
+        if (msg==""){ oUInput.mClose1();}
+        else if (Looper.myLooper() == Looper.getMainLooper()) {   //Main thread
+            oUInput.mMessage((nTestCount++)+"-"+msg,nTimeOut);
+        } else {
+            handler.post(new Runnable() {
+                public void run() {
+                    oUInput.mMessage((nTestCount++)+":"+msg,nTimeOut);
+                }
+            });
+
+        }
+    }
+
+    public static void mWaitMsg(String wait, String s) {
+        mWaitMsg(s,0);
+    }
+
+    public static String mMsgLog() {
+        return sMsgLog;
     }
 }

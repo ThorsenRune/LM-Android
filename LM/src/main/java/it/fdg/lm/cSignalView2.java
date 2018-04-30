@@ -16,13 +16,12 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.LinearLayout;
 
 import static it.fdg.lm.cAndMeth.mIsHidden;
 import static it.fdg.lm.cFunk.mLimit;
 import static it.fdg.lm.cProgram3.mMessage;
+import static it.fdg.lm.cProgram3.mMsgLog;
 import static it.fdg.lm.cProgram3.mPalIdx2Col;
-import static it.fdg.lm.cProgram3.mySignal;
 import static it.fdg.lm.cProgram3.nSignalPage;
 import static it.fdg.lm.cProgram3.oSlider;
 import static java.lang.Math.sin;
@@ -35,12 +34,6 @@ public class cSignalView2 extends View {
     private int nCanvasHeight=1;
     private Path mPath;
     private Paint mPaint;
-    public float nScaleFactor = 1.0f;//2.1
-    private float scalePointX, scalePointY;
-    private float mLastTouchX, mLastTouchY;
-
-    private float mX;
-    private float mY;
     private static final float TOLERANCE = 5;
     float pY, vY,cX, cY,mPosX, mPosY;
     Bitmap mBitmap;
@@ -67,7 +60,7 @@ public class cSignalView2 extends View {
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeWidth(4f);
-       // mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+
     }
 
 
@@ -90,10 +83,7 @@ public class cSignalView2 extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        // draw the mPath with the mPaint on the canvas when onDraw
-//        canvas.translate(0,canvas.getHeight());   // reset where 0,0 is located
-//        canvas.scale( myProtElem1.aData.nDataLength,-1);
-//        canvas.scale(1,-1,nCanvasWidth/2,nCanvasHeight/2);
+
         //Draw the signal
         canvas.drawPath(mPath, mPaint);
         //R170822       Draw the alias on the signal pane
@@ -146,15 +136,17 @@ public class cSignalView2 extends View {
 
     private void mRedraw() {
         myId1="WS"+myIndex+"_"+nSignalPage;
-        oElemViewProps= cProgram3.getElementViewById(myId1);        //R170727
+        oElemViewProps= cProgram3.mGetViewProps(this,myId1);        //R170727
         if ((oElemViewProps !=null)&(mPaint!=null)) {
             oElemViewProps.mUpdate(this);
             //Set the visibility of the container to the visibility of this
+            /*
             ((LinearLayout)this.getParent()).setVisibility(this.getVisibility());
             if (mIsHidden(this)) {
                 nSignalPage = 0;
                 return;
             }
+            */
             mPaint.setColor(mPalIdx2Col(oElemViewProps.nColorGet1(0)));
             this.setBackgroundColor(mPalIdx2Col(oElemViewProps.nColorGet1((byte) 1)));
             this.setBackgroundColor(Color.BLUE);
@@ -175,17 +167,10 @@ public class cSignalView2 extends View {
         nSignalPage=mLimit(0,nSignalPage+nPageChange,1);
         cUInput.mSetFocus(this);
         cProgram3.bDoRedraw=true;
-        mMessage("Panel "+nSignalPage);
+        mMsgLog(10,"Panel "+nSignalPage);
     }
 
-    public void mShow(boolean b) {
-        if (_oElement==null) mShiftPane(-1);    //Back up
-        if (b)
-           mySignal.oElemViewProps.bVisible(true);
-        else
-            mySignal.oElemViewProps.bVisible(false);
-        cProgram3.bDoRedraw=true;
-    }
+
 
 }
 

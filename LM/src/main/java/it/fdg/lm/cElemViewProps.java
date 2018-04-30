@@ -24,6 +24,7 @@ import static it.fdg.lm.cProgram3.bDoRedraw;
 import static it.fdg.lm.cProgram3.mErrMsg;
 import static it.fdg.lm.cProgram3.oFocusdActivity;
 import static it.fdg.lm.cProgram3.oaProtocols;
+import static java.lang.Math.round;
 
 
 public  class cElemViewProps {
@@ -32,9 +33,14 @@ public  class cElemViewProps {
     public View myView = null;               //The owner view
     private int nAutoRangeCount = 0;
     private int nProperties;                    //Properties of the view, enabled, ...
-    public int nShape=0;                         //Shape of the view
+    public int nTypeId =0;                         //Shape of the view
     private String _ProtName="Null", _ElemName="None";        //identifiers for the element
     private int _ElemDataIdx = 0;           //If scalar this is the cProtData.aData[index] to show
+
+    public cElemViewProps(String sId) {
+        myId1=sId;
+    }
+
     public void mZoom(float scalePointX, float scalePointY, float nFactor) {    //171003 implementing zoom
         float na = myProtElem().nDisplayRange[0];
         float nb = myProtElem().nDisplayRange[1];
@@ -42,9 +48,13 @@ public  class cElemViewProps {
         float newrange = (nb - na)/ nFactor;
         float newA = mid - newrange / 2;
         float newB = mid + newrange / 2;
-        myProtElem().nDisplayRange[0]=newA;
+        if (newB>20)
+            newB=round(newB/5)*5;
+        if (myProtElem().nDisplayRange[0]!=0) myProtElem().nDisplayRange[0]=newA;       //Don't change a zero offset
         myProtElem().nDisplayRange[1]=newB;
+        bDoRedraw=true;
     }
+
     public String mScaleMaxStr() {
         if (myProtElem()==null) return "Null";
         float v = myProtElem().nDisplayRange[1];
@@ -56,7 +66,7 @@ public  class cElemViewProps {
     }
     public String mVal2Str(double v) {
         String u = myProtElem().getUnits();
-        String s = String.format("%.1f ", v) + u;
+        String s = String.format("%.2f ", v) + u;
         return s;
     }
     private cProtElem myProtElem() {
@@ -88,8 +98,17 @@ public  class cElemViewProps {
     public int mGetElemIdx(){
         return _ElemDataIdx;
     }
+
+    public String sTypeList() {
+        if (myView instanceof cSliderView)
+            return cSliderHandle.sTypeList;
+        else
+            return "";
+    }
+
+
     private enum ePropIdx {
-        kVisible, kEditable, kWriteOnStart
+        kVisible, kEditable, kWriteOnStart,kLimit2Siblings, kZoomAble;
     }
 
     //*****************+            IMPLEMENTATION  ***********************
@@ -110,7 +129,7 @@ public  class cElemViewProps {
             s[1] = sElemName();
             s[2] = mInt2str(_ElemDataIdx);
             s[3] = mInt2str(nProperties);
-            s[4] = mInt2str(nShape);
+            s[4] = mInt2str(nTypeId);
 
         }
         s = mPrefs5(bGetIt, sKey, s);
@@ -118,7 +137,7 @@ public  class cElemViewProps {
         mSetElement(s[0],s[1]);
         _ElemDataIdx = mStr2Int(s[2]);
         nProperties = mStr2Int(s[3]);     //Visibility of the control
-        nShape = mStr2Int(s[4]);
+        nTypeId = mStr2Int(s[4]);
     }
 
     void mSetElement(String protName, String elemName) {
@@ -186,7 +205,6 @@ public  class cElemViewProps {
 
     public int mRawValue() {            //Get the raw value
         if (myProtElem() == null) return -1;
-        if (myProtElem().nVarId()<0) return -1;
         return myProtElem().mDataRead(_ElemDataIdx);
     }
 
@@ -227,7 +245,15 @@ public  class cElemViewProps {
     public boolean bEnabled() {
         return 0 < cFunk.bitstate(nProperties, ePropIdx.kEditable.ordinal());
     }
-
+    public boolean bLimit2Siblings() {
+        return 0 < cFunk.bitstate(nProperties, ePropIdx.kLimit2Siblings.ordinal());
+    }
+    public void bLimit2Siblings(boolean checked) {
+        nProperties=cFunk.nBitMask(nProperties, ePropIdx.kLimit2Siblings.ordinal(),checked);
+    }
+    public boolean bZoomAble() {
+        return 0 < cFunk.bitstate(nProperties, ePropIdx.kZoomAble.ordinal());
+    }
     public void bWriteOnStart(boolean checked) {
         //Clear bit bits= bits & ~(1L << n)
         if (checked)
@@ -315,7 +341,6 @@ public  class cElemViewProps {
     }
 
     private float nRange() {            //Return a non null  max-min range of the display
-
         if (_oElement1==null){
             _oElement1=myProtElem();
             return 1;

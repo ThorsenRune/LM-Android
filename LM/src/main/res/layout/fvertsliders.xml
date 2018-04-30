@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
          android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:background="@drawable/backborder"
-
-        android:layout_height="wrap_content">
+    >
         <!-- Vertical slider are havigng ID: WV#            -->
         <it.fdg.lm.cSliderView
             android:id="@+id/WV0"
@@ -22,6 +22,7 @@
             android:layout_marginRight="5mm"
             android:padding="10pt"
             android:scrollbarSize="1mm"
+
             android:tag="4" />
 
         <it.fdg.lm.cSliderView
@@ -48,7 +49,8 @@
         <View android:layout_width="0dp"
             android:visibility="invisible"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            />
 
         <it.fdg.lm.cSliderView
             android:id="@+id/WV4"
@@ -84,7 +86,8 @@
         <View android:layout_width="0dp"
             android:visibility="invisible"
             android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            />
 
         <it.fdg.lm.cSliderView
             android:id="@+id/WV7"
@@ -93,7 +96,8 @@
             android:layout_gravity="center"
             android:layout_marginRight="5mm"
             android:padding="10pt"
-            android:scrollbarSize="1mm"
+            android:scrollbarSize="2mm"
+
             android:tag="4" />
 
         <it.fdg.lm.cSliderView

@@ -24,14 +24,21 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import static it.fdg.lm.cFunk.byteArrayToString;
+import static it.fdg.lm.cFunk.mFloat2Str;
 import static it.fdg.lm.cFunk.mFloatArr2Str;
+import static it.fdg.lm.cFunk.mInt2str;
+import static it.fdg.lm.cFunk.mIntArr2HexStr;
 import static it.fdg.lm.cFunk.mIntArr2Str;
+import static it.fdg.lm.cFunk.mStr2Float;
 import static it.fdg.lm.cFunk.mStr2FloatArr;
-import static it.fdg.lm.cFunk.*;
+import static it.fdg.lm.cFunk.mStr2Int;
+import static it.fdg.lm.cFunk.mStr2IntArr;
+import static it.fdg.lm.cFunk.mStr2StrArr;
+import static it.fdg.lm.cFunk.mStrArr2Str;
 import static it.fdg.lm.cFunk.mTrim;
 import static it.fdg.lm.cProgram3.mErrMsg;
-import static it.fdg.lm.cProgram3.mMessage;
 import static it.fdg.lm.cProgram3.mMsgDebug;
+import static it.fdg.lm.cProgram3.mMsgLog;
 
 
 /**
@@ -107,7 +114,7 @@ public class cFileSystem {
             FileOutputStream fileOut = new FileOutputStream(myFile);     //2ver
             fileOut.write(sSaveText.getBytes());   //2ver
             fileOut.close();
-            mMsgDebug( "Settings Saved!");
+            mMsgLog(4, "Settings Saved!");
         } catch (Throwable t) {
             mMsgDebug("Exception: " + t.toString());
             //Check: Did you pass the right context?
@@ -146,10 +153,10 @@ public class cFileSystem {
         String[] list = prefsdir.list();
         String fl="";
         for (int i = 0; i < list.length; i++) {
-            if (list[i].contains(StripExt)){
-                fl = fl + list[i].replaceAll(StripExt, ";");
+                if (list[i].contains(StripExt)){
+                    fl = fl + list[i].replaceAll(StripExt, ";");
+                }
             }
-        }
         return fl.split(";");
     }
     public static String[] mGetDownloadFileNames(String StripExt){
@@ -158,6 +165,7 @@ public class cFileSystem {
         File directory = new File(path);
         String[] list = directory.list();
         String fl="";
+        if (list!=null)
         for (int i = 0; i < list.length; i++) {
             if (list[i].contains(StripExt)){
                 fl = fl + list[i].replaceAll(StripExt, ";");
@@ -169,14 +177,14 @@ public class cFileSystem {
         Field[] fields = R.raw.class.getFields();
         String[] list=new String[fields.length];
         for(int i=0; i < fields.length; i++){
-            list[i]=fields[i].getName();
+             list[i]=fields[i].getName();
         }
         return list;
     }
     public static int mPrefFileNameSet(String sPrefFileName){
         //Set the current preferences file, (load factory settings from raw directory
         sPrefFileName=sPrefFileName.replace(".xml",""); //Remove extension
-         mMessage("File:"+ sPrefFileName);
+        mMsgLog(5,"Setup File:"+ sPrefFileName);
         oPreferences = mContext.getSharedPreferences(sPrefFileName, Context.MODE_PRIVATE);
         prefsEditor = oPreferences.edit();
         return oPreferences.getAll().size();
@@ -277,10 +285,10 @@ public class cFileSystem {
         aStr=mStr2StrArr(mPrefs5(bGetIt, sKey, mStrArr2Str(aStr)));
         return aStr;
     }
-    public static boolean mPrefs5(boolean getIt, String privileges, boolean bShowHidden) {
+    public static boolean mPrefs5(boolean getIt, String sKey, boolean bValue) {
         int v=0;            //Convert true=1
-        if (bShowHidden) v=1;
-        v= mPrefs5(getIt,privileges,v);
+        if (bValue) v=1;
+        v= mPrefs5(getIt,sKey,v);
         return v != 0;
     }
     public static int mPrefs5(boolean doGet, String sKey, int Value){      //Remember int
@@ -303,4 +311,5 @@ public class cFileSystem {
         mStr2Pref(s);
         return s;
     }
+
 }

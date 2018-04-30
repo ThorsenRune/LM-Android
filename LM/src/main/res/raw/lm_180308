@@ -10,21 +10,28 @@ P1.Elements	=>	[nMode.all_flags, aRMSfilt, xData, yData, xData1, yData1, IMin, a
 
 //-----------------WIDGET SETTINGS
 Widgets	=>	[B0, WV0A0, WV0B0, WV0C0, WV6A0, WV6B0,
-            WV7A0, WS1_0, WS1_1, WH0A1, WH0B1, WH0C1, WH0D1 ];
-//                  Name of element, index in elementvector, properties b0:visibility,b1:editable,b2:write on start
+            WV7A0, WS1_0, WS1_1, WH0A0, WH0B0, WH0C0, WH0D0 ];
+//Visibility of sliders
+bHorizSlidersVisible	=>	[1];
+bVertSlidersVisible	=>	[1];
+bSignalVisible	=>	[1];
+
+//                  Name of element, index in elementvector, properties b0:visibility,b1:editable,b2:write on start,3: Shape
 WV0A0.Name	=>	[P1,IMin, 0, 3,2];
-WV0B0.Name	=>	[P1,aIAmp, 0, 1,0];
+WV0B0.Name	=>	[P1,aIAmp, 0, 3,0];
 WV0C0.Name	=>	[P1,IMax, 0, 3,3];
 
 WV6A0.Name	=>	[P1,Offset, 0, 3,3];
-WV6B0.Name	=>	[P1,aRMSfilt, 0, 1,0];
+WV6B0.Name	=>	[P1,aRMSfilt, 0, 3,0];
 WV7A0.Name	=>	[P1,Gain, 0, 3,4];
-//Horizontal sliders
+//Horizontal sliders  blanking
 
-WH0A1.Name	=>	[P1,nBlankInterval, 0, 3];
-WH0B1.Name	=>	[P1,nBlankInterval, 1, 3];
-WH0C1.Name	=>	[P1,nBlankInterval, 2, 3];
-WH0D1.Name	=>	[P1,nBlankInterval, 3, 3];
+WH0A0.Name	=>	[P1, nBlankInterval, 0, 3, 2];
+WH0B0.Name	=>	[P1, nBlankInterval, 1, 3, 3];
+WH0C0.Name	=>	[P1, nBlankInterval, 2, 3, 2];
+WH0D0.Name	=>	[P1, nBlankInterval, 3, 3, 3];
+
+
 
 //Signals   name_page
 WS1_0.Name	=>	[P1,xData, 0, 1];
@@ -179,7 +186,7 @@ P1.nMode.all_flags.DispRange	=>	[0.0, 50.0];
 P1.nMode.all_flags.Factor	=>	[1.0];
 P1.nMode.all_flags.Offset	=>	[0];
 P1.nMode.all_flags.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
-P1.nMode.all_flags.Unit	=>	[];
+P1.nMode.all_flags.bWriteOnReset	=>	[0];
 P1.nTimerInMs.Alias	=>	[];
 P1.nTimerInMs.Color2	=>	[0, 0, 0, 0];
 P1.nTimerInMs.Color1	=>	[0, 0];
@@ -195,7 +202,7 @@ P1.xData.Color1	=>	[5, 5];
 P1.xData.Color2	=>	[0, 0];
 P1.xData.Data	=>	[-50000, 39325000, -3275000, -52000000, -35825000, -3625000, 20850000, 52275000, 64725000, 62400000, 57900000, 55275000, 51825000, 46750000, 40025000, 25475000, 6625000, -6700000, -10525000, -9050000, -8325000, -9825000, -13050000, -14175000, -15200000, -18175000, -20725000, -24725000, -29600000, -28950000, -26650000, -25725000, -23800000, -21000000, -20150000, -22425000, -31675000, -41850000, -42475000, -35200000, -23025000, -8350000, 5950000, 19550000, 29575000, 35775000, 38325000, 40750000, 48350000, 53700000, 54275000, 53400000, 49350000, 43850000, 33700000, 16100000, -775000, -9550000, -9625000, -8150000, -8250000, -11250000, -13475000, -13325000, -15700000, -17925000, -21450000, -27475000, -29375000, -27950000, -26475000, -25150000, -23275000, -20925000, -21050000, -26475000, -37525000, -43450000, -39250000, -29650000, -15875000, -1350000, 12550000, 25200000, 33100000, 37075000, 38850000, 43825000, 51000000, 53750000, 53975000, 51675000, 47375000, 40975000, 26875000, 7825000, -5975000, -9950000, -8625000, -7825000, -9200000, -12925000, -13750000, -14200000, -17650000, -20800000, -25100000, -28725000, -28125000, -26700000];
 P1.xData.Descr	=>	[Raw EMG Signal];
-P1.xData.DispRange	=>	[-1.0, 1.0];
+P1.xData.DispRange	=>	[0, 1.0];
 P1.xData.Factor	=>	[2.68E8];
 P1.xData.Offset	=>	[0];
 P1.xData.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
@@ -206,7 +213,7 @@ P1.xData1.Color1	=>	[0, 11];
 P1.xData1.Data	=>	[0];
 P1.xData1.Descr	=>	[];
 P1.xData1.DispRange	=>	[0.0, 50.0];
-P1.xData1.Factor	=>	[1.0];
+P1.xData1.Factor	=>	[2.68E8];
 P1.xData1.Offset	=>	[0];
 P1.xData1.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
 P1.xData1.Unit	=>	[];
@@ -215,7 +222,7 @@ P1.yData.Color2	=>	[0, 0];
 P1.yData.Color1	=>	[6, 6];
 P1.yData.Data	=>	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 P1.yData.Descr	=>	[cleaned EMG Signal];
-P1.yData.DispRange	=>	[-0.029011194, 0.031809703];
+P1.yData.DispRange	=>	[-1.0, 1.0];
 P1.yData.Factor	=>	[2.68E8];
 P1.yData.Offset	=>	[0];
 P1.yData.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
@@ -232,3 +239,4 @@ P1.yData1.Properties	=>	[0, 0, 0, 0, 0, 0, 0, 0];
 P1.yData1.Unit	=>	[];
 
 
+nPanelSizes	=>	[3, 1, 1, -1, 0];

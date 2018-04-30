@@ -41,7 +41,7 @@ import static it.fdg.lm.cProgram3.mMsgDebug;
 public class cAndMeth extends Activity{
     private static  Context mContext;
     public static Paint oTextPaint= new Paint();                               //General text format
-    private static boolean isBlockedScrollView=false;                           //Enable/Block scrollviews
+    private static boolean isBlockedScrollView=true;                           //Enable/Block scrollviews
 
     public static void mInit(Context main2) {
         mContext=main2;
@@ -78,9 +78,10 @@ public class cAndMeth extends Activity{
         float w = ((LinearLayout.LayoutParams) lp).weight;
         return w;
     }
-    public static void mLayoutWeightSet(ViewGroup myPane, float w) {
-        ViewGroup.LayoutParams lp = myPane.getLayoutParams();
-        if (myPane instanceof LinearLayout) {
+    public static void mLayoutWeightSet(ViewGroup myPane, float w) {    //Set relative size or hide if negative
+        mSetVisibility(myPane,w>0);
+        if (w>1){
+            ViewGroup.LayoutParams lp = myPane.getLayoutParams();
             ((LinearLayout.LayoutParams) lp).weight = w;
             myPane.setLayoutParams(lp);
         }
@@ -90,7 +91,7 @@ public class cAndMeth extends Activity{
         }catch( InterruptedException e){
             mMsgDebug("Cant sleep 170929" +Thread.currentThread().getName());
         }
-        if (i>99)
+        if (i>199)
             mMsgDebug("Long sleep");
     }
 
@@ -100,7 +101,7 @@ public class cAndMeth extends Activity{
     }
 
     public static void mToggleVisibility(View view) {
-        if (view.getVisibility()== View.VISIBLE)
+         if (view.getVisibility()== View.VISIBLE)
             view.setVisibility(View.GONE);
         else
             view.setVisibility(View.VISIBLE);
@@ -164,7 +165,7 @@ public class cAndMeth extends Activity{
         return nV;
     }
 
-    public static boolean mMatchChildVisibility(ViewGroup rootView){
+    public static boolean mMatchChildVisibility(ViewGroup rootView){    //Todo move to codesnippets
         boolean isVisible=false;
         int n = rootView.getChildCount();
         for (int i = 0; i < n; i++) {
@@ -218,7 +219,7 @@ public class cAndMeth extends Activity{
 
     public static void mTextViewSetTextSize(TextView textView) {        //Ref171018
         if (nTextSize==0) nTextSize= (int) textView.getTextSize();  //Get the textsize in pixels
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, nTextSize);
+    //    textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, nTextSize);
     }
 
     public static void mDropDownSetSelection(Spinner spnr, String value) {

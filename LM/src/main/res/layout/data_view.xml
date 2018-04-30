@@ -7,7 +7,6 @@
     >
 
     <RelativeLayout
-
         android:id="@+id/relativeLayout1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,8 +14,9 @@
         android:layout_alignParentTop="true">
 
         <Button
-            android:padding="0dp"
+
             android:layout_margin="0dp"
+            android:layout_marginLeft="10dp"
             android:id="@+id/lblElementName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -24,27 +24,22 @@
             android:layout_alignParentTop="true"
             android:text="Element"
             android:textAllCaps="false"
+            android:gravity="center_vertical|left"
+            android:paddingLeft="1mm"
             />
 
         <TextView
             android:layout_margin="0dp"
             android:id="@+id/ideditValue1"
-            layout_toEndOf="@+id/lblElementName"
-            layout_toRightOf="@+id/lblElementName"
-            android:layout_width="wrap_content"
+            android:layout_toRightOf="@id/lblElementName"
+            android:gravity="center"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
-            android:layout_alignParentLeft="false"
-            android:layout_alignParentStart="false"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
             android:layout_marginLeft="51dp"
             android:layout_marginStart="51dp"
             android:inputType="numberSigned"
             android:padding="10dp"
             android:text="Value" />
-
-
     </RelativeLayout>
     <RelativeLayout
 

@@ -7,7 +7,7 @@ package it.fdg.lm;
 
 public class cKonst {
     //User levels
-    public static int kUserAdmin=2;
+
     public static       String sKeyFieldSep=".";
 
     public enum eProtState{                         //States of the protocol        (171012 refactored to here)
@@ -23,7 +23,9 @@ public class cKonst {
         //Error in protocol initialization
         kProtTimeOut,
         kProtError,
-        kRelay, kDoConnect1;
+        kRelay,
+        kDoConnect1,
+        kDoDisconnect;                          //Request a disconnection
     }
     //Serial communication states
     enum eSerial{
@@ -32,11 +34,10 @@ public class cKonst {
         kBT_InvalidBT1,                                  //Cant open bluetooth, servere problem
         kBT_Disconnected,                                //No device is associated
         kBT_InvalidDevice1,                              //Device not paired
-        kBT_DevicePickerActive,                          //Waiting for user to select a device with devicepicker
+
         kBT_Connected1,                                 //device is connected
         kDeviceWasSelected,                             //A device was selected and paired
         kBT_Undefined,                                  //Unconnected - waiting for some BT event
-         // following cKonst.eProtState.kUnconnected
         kBT_TimeOut,
          kConnectionError,
 

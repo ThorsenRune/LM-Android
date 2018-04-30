@@ -23,8 +23,8 @@ import static it.fdg.lm.cFileSystem.mStr2Pref;
 import static it.fdg.lm.cProgram3.mAppSettings;
 import static it.fdg.lm.cProgram3.mMessage;
 import static it.fdg.lm.cProgram3.mPersistAllData;
+import static it.fdg.lm.cProgram3.oUInput;
 import static it.fdg.lm.cProgram3.sFile_ProtCfg;
-import static it.fdg.lm.cProgram3.sMsgLog;
 
 
 
@@ -56,13 +56,9 @@ public class cSetupFile extends BaseActivity {
         oTextMsg=(TextView)findViewById(R.id.idMsg);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);   //Hide the soft keyboard when activity gets focus
         sFilterText( cUInput.sElemName());
+        oUInput.mSettingsDialog();
     }
 
-
-
-    private void cmdCommand1() {
-        cmdCommand();
-    }
 
     @Override
     protected void onDestroy() {            //Last event before program is killed
@@ -178,14 +174,6 @@ public class cSetupFile extends BaseActivity {
             mSettings_Save();
             return true;
         }
-        else if (mnuClick(nId,"See error log")) {
-            mEditText(sMsgLog);
-            sMsgLog="";
-            return true;
-        }
-
-
-
         return true;
     }
 

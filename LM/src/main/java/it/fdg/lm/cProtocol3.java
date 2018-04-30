@@ -21,9 +21,12 @@ import static it.fdg.lm.cKonst.eProtState.kProtInitInProgress;
 import static it.fdg.lm.cKonst.eProtState.kProtReady;
 import static it.fdg.lm.cKonst.eProtState.kProtResetReq1;
 import static it.fdg.lm.cKonst.eProtState.kUnconnected2;
+import static it.fdg.lm.cProgram3.bAutoConnect;
 import static it.fdg.lm.cProgram3.bDoRedraw;
+import static it.fdg.lm.cProgram3.mCommandTxt;
 import static it.fdg.lm.cProgram3.mErrMsg;
-import static it.fdg.lm.cProgram3.mMessage;
+import static it.fdg.lm.cProgram3.mMsgLog;
+import static it.fdg.lm.cProgram3.oUInput;
 import static it.fdg.lm.cProgram3.oaProtocols;
 import static it.fdg.lm.cProgram3.sDevices2;
 
@@ -108,10 +111,11 @@ public  class cProtocol3 {                  //This was formerly just called prot
         /* Call:mPersistAllData->mSettings          */
         sElemListKey=sProtName()+cKonst.sKeyFieldSep+ "Elements";
         this.mSetProtElementList(mPrefs5(bGet,sElemListKey , this.mGetProtElementList()));   //
+        if (mProtElemLength()>1)
         for(int i = 0; i< mProtElemLength(); i++){
             oaProtElem[i].mSettings(bGet);      //Get settings for sKey=sVarName;
         }
-        mMessage("Loaded elements:"+mProtElemLength());
+        mCommandTxt("Loaded protocol:"+mProtElemLength());
     }       //Set/Get persistent data
     //******************************			PROPERTIES     ************************
             //      *** REQUESTS ***
@@ -121,6 +125,7 @@ public  class cProtocol3 {                  //This was formerly just called prot
     }
     void mBT_PickDevice2() {
         if (oSerial==null) return;
+        oSerial.mDisconnect();
         oSerial.mBT_PickDevice2();
 
     }
@@ -141,35 +146,24 @@ public  class cProtocol3 {                  //This was formerly just called prot
 
 
 
-
-    //  Processing in background thread the serial communications
-    public void mAsyncProcessing_Call() {  //A thread connecting to the device
-        if (isRunning==false) {
-            isRunning = true;
-            new Thread(new Runnable() {
-            public synchronized void run() {
-                Thread.currentThread().setName("mAsyncProcessing_Call");
-//                Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-             //   mProcess_Async();
-                cProgram3.bDoRefresh = true;
-                }
-            }).start();         //Important. actually starts the process
-            isRunning = false;
-        }
-    }
     public void mProcess_Async() {
+        mRelay();       //Relay old data, get changes from client
         if (getState()== cKonst.eProtState.kProtReady) {            //Protocol statemachine
-            mRelay();       //Relay old data, get changes from client
             boolean ret = mTX_Dispatch();      //170605    Rewritten to process only datarequests
             oSerial.mProcessSerial();    //Send the request immediately
             mDispatchRX(nCmd, zState);
             if (!oSerial.mIsConnected())
                 mStateSet(kUnconnected2);   //180328    detect broken connection disconnected
+        } else if (mIsState(cKonst.eProtState.kDoDisconnect)){
+            mMsgLog(2,"Disconnecting");
+            oSerial.mDisconnect();
+            mStateSet(kUnconnected2);   //180328    detect broken connection disconnected
         } else if (mIsState(kDoConnect1)){
-            if (oSerial.isConnected()) {
+            if (oSerial.isConnected(sDeviceName())) {
                 oSerial.mDisconnect();
                 return;
             }
+            mCommandTxt("Wait:Calling"+mDeviceNameGet());
             oSerial.mConnect(mDeviceNameGet());
             if (oSerial.isConnected())
                 mStateSet(kProtResetReq1);
@@ -177,22 +171,24 @@ public  class cProtocol3 {                  //This was formerly just called prot
                 mStateSet(kUnconnected2);
         } else if (mIsState(kProtResetReq1)) {    //Request the protocol setup
             //We will assume that the protocol has been preinitialized from file, we look for ID's of variables
-            mMessage("Resetting: "+sProtName());
+            mMsgLog(5,"Resetting: "+sProtName());
             mStateSet(kProtInitInProgress);      //Idle mode awaiting initialization of the protocol
             mTX_ProtReset();                //Set a protocol reset command
         } else if (getState()==  kProtInitInProgress) {
              bDoRedraw=true;
             if (mVerifyInit()) {
-                mMessage( sDeviceName()+ " Ready");
-                bDoRedraw=true;
                 mStateSet(cKonst.eProtState.kProtInitDone);    //Protocol good to use
             }else {
                 mStateSet(kProtInitFailure); //No data was received
                 mTX_ProtReset();                //Set a protocol reset command
             }
-        } else         if (getState()== kProtInitDone) {
+        } else if (getState()== kProtInitDone) {
             mStateSet(kProtReady);   //Now the UI knows the protocol is ready  so display can be refreshed
             bDoRedraw=true;
+         }
+        else if (bAutoConnect()) {
+            if (oSerial.mConnect(sDeviceName()))
+                mStateSet(kProtResetReq1);              //Just connected to device
          }
         cProgram3.bDoRefresh = true;
     }
@@ -351,6 +347,7 @@ public  class cProtocol3 {                  //This was formerly just called prot
             mErrMsg("Error in protocol, add "+sElemListKey+"  "+oNewElement.sVarName);
         } else {
             oaProtElem[idx].mCopyElement(oNewElement);
+            mMsgLog(5,sDeviceName() +":"+oNewElement.sVarName +"("+idx+")");
         }
     }
 
@@ -378,6 +375,11 @@ public  class cProtocol3 {                  //This was formerly just called prot
             if (oaProtElem[i].nVarId()<64) {      //Protocol not from device if varid is less than 64
                 mErrMsg(oaProtElem[i].sVarName+ "Not found device: "+sProtName());
                 return false;
+            } else {
+                if( cProgram3.bWriteOnReset)
+                if( oaProtElem[i].bWriteOnReset)
+                oaProtElem[i].mSetRequest(10);
+
             }
         }
         return ( 2<mProtElemLength());
@@ -412,7 +414,7 @@ public  class cProtocol3 {                  //This was formerly just called prot
 
     private void mDebugNull(cProtElem obj) {
         if (obj==null){
-            mErrMsg("Null pointer");
+            mErrMsg("Null pointer (180412)");
         }
 
     }
@@ -489,10 +491,31 @@ public  class cProtocol3 {                  //This was formerly just called prot
         return nProtState;
     }
     public void mStateSet(cKonst.eProtState newState) {      //!!!Refactor to enum
-        if (nProtState!=newState)           //180404
-            bDoRedraw=true;             //171012    A changed state will require a display redraw
+        if (nProtState!=newState) {          //180404
+            bDoRedraw = true;             //171012    A changed state will require a display redraw
+            switch (newState){
+                case kProtError:mWaitMsg("Error in protocol");break;
+                case kProtUndef1:mWaitMsg("Undefined Protocol");break;
+                case kProtInitInProgress:
+                    mMsgLog(8,"Initializing protocol");break;
+                case kProtInitDone:
+                    mMsgLog("Protocol Ready");oUInput.mClose1();break;
+                case kUnconnected2:
+                    mMsgLog(sDeviceName()+" Disconnected");
+                    bDoRedraw=true;
+                    break;
+                case kProtReady:    //180420b
+                    mCommandTxt(sDeviceName()+" is Ready");
+                //case kDoConnect1: mMessage(sDeviceName()+" Searching" );break;
+            }
+        }
         nProtState=newState;
     }
+
+    private void mWaitMsg(String s) {
+        cProgram3.mWaitMsg("Protocol",s);
+    }
+
     public boolean mIsState(cKonst.eProtState nCheckState) {
         return nCheckState==nProtState;
     }
@@ -618,10 +641,14 @@ public  class cProtocol3 {                  //This was formerly just called prot
 
 
     public void mDeviceNameSet(String s) {      //Set a new device name and request a connection
-        mMessage("Pinging "+s);
+        mMsgLog(4,"Pinging "+s);
         sDevices2[myIndex]=s;
         cProgram3.bDoSavePersistent=true;
         mStateSet(kDoConnect1);
+    }
+
+    public boolean isPaired() {
+        return oSerial.isPaired(sDeviceName());
     }
 }
 

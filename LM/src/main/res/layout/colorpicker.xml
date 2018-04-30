@@ -65,18 +65,18 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="0.5"
-        android:layout_gravity="center"
+    android:layout_height="match_parent"
+    android:layout_weight="0.5"
+    android:layout_gravity="center"
 
-        >
-        <RelativeLayout
-            android:id="@+id/idparent3"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-             android:orientation="vertical">
-        </RelativeLayout>
-    </ScrollView>
+    >
+    <RelativeLayout
+        android:id="@+id/idparent3"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+    </RelativeLayout>
+</ScrollView>
 
 
 </LinearLayout>

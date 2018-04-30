@@ -1,4 +1,9 @@
+<!--
+170824
+ folder: https://drive.google.com/drive/u/0/folders/0B5pCUAt6BabuU1I1Ri1zNzA4SG8
+ Doc:https://docs.google.com/document/d/1Vm-QkTZDpCuf73Hw-wwBEyKiak3o5lhlP4TAAvQTsx8/edit
+ -->
 <resources>
     <dimen name="fab_margin">16dp</dimen>
-    <dimen name="myFontSize">12pt</dimen>
+    <dimen name="myFontSize">10pt</dimen>
 </resources>

@@ -8,15 +8,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import static it.fdg.lm.cAndMeth.mIsHidden;
-import static it.fdg.lm.cAndMeth.mToggleVisibility;
 import static it.fdg.lm.cFileSystem.mFileRead_Raw;
-import static it.fdg.lm.cGestureListener.nSignalPaneHeight;
-import static it.fdg.lm.cProgram3.bAdmin;
+import static it.fdg.lm.cKonst.eProtState.kProtReady;
 import static it.fdg.lm.cProgram3.mErrMsg;
+import static it.fdg.lm.cProgram3.nPanelSizes;
 import static it.fdg.lm.cProgram3.oFocusdActivity;
 import static it.fdg.lm.cProgram3.oUInput;
-import static it.fdg.lm.fMain.fPanelSignals1;
+import static it.fdg.lm.cProgram3.oaProtocols;
 import static it.fdg.lm.fMain.fPanelVertSliders;
 
 
@@ -30,21 +28,27 @@ public class BaseActivity extends AppCompatActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu){
+        if (fPanelVertSliders==null) return false ; //Guard null pointer
         myMenu = menu;
         myMenu.clear();
         mDoMenu(myMenu, -1);    //Just redraw menus
+        mStatusRedraw();
         return super.onPrepareOptionsMenu(menu);
     }
 
-
-
-
-    public static void mStatus( String s){
+    public static void mStatusRedraw() {
+        String sDsc="";
+        for (int i = 0; i < oaProtocols.length; i++) {
+            if (oaProtocols[i].getState()==kProtReady)  sDsc=sDsc+","+oaProtocols[i].mDeviceNameGet()+"=OK";
+            if (oaProtocols[i].getState()!=kProtReady) {sDsc=sDsc+","+oaProtocols[i].mDeviceNameGet()+"=Err";}
+            if (oaProtocols[i].getState()==kProtReady)  sDsc= "Devices - OK";
+            if (oaProtocols[i].getState()!=kProtReady) {sDsc= "Device - ERROR";break;}
+        }
         if (myMenu==null) return;
         if (mnuStatus==null)
             mnuStatus=myMenu.findItem(1);
         if (mnuStatus!=null)
-            mnuStatus.setTitle( s);
+            mnuStatus.setTitle( sDsc);
     }
     private boolean mDoMenu(Menu myMenu, int id) {
         mMenuCommon(myMenu,id);
@@ -59,64 +63,40 @@ public class BaseActivity extends AppCompatActivity {
 
     public boolean mMenuAction_dm(Menu myMenu, int nId) {
         if (myMenu == null) return false;
-        if (mnuClick(nId, "Set Value", cUInput.mSelected())) {
+        if (mnuClick(nId, "Set Value", oUInput.mSelected())) {
             oUInput.mInputValue1();
         }
         myMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "______________________________________").setEnabled(false);
-        if (mnuCheck(nId, cKonst.eTexts.txtMenu_showVertical, !mIsHidden(fPanelVertSliders))) {
-            mToggleVisibility(fPanelVertSliders);
+        if (mnuCheck(nId, cKonst.eTexts.txtMenu_showVertical, nPanelSizes[0]>0)) {
+            nPanelSizes[0]=-nPanelSizes[0];
             cProgram3.bDoRedraw = true;
         }
-        if (mnuCheck(nId, "Show signal", !mIsHidden(fPanelSignals1))) {      //Revision 170921 increase panel size
-            mToggleVisibility(fPanelSignals1);
-            cAndMeth.mLayoutWeightSet(fPanelSignals1, nSignalPaneHeight);
+        if (mnuCheck(nId, "Blanking",nPanelSizes[1]>0)) {
+            nPanelSizes[1]=-nPanelSizes[1];
+            cProgram3.bDoRedraw = true;
         }
-        if (bAdmin())   //180328c
-        if (mnuCheck(nId, "Show Data",  cProgram3.mShowData())) {      //Revision 170921 increase panel size
-            cProgram3.mShowData(!cProgram3.mShowData());
+        if (mnuCheck(nId, "Show signal", nPanelSizes[2]>0)) {      //Revision 170921 increase panel size
+            nPanelSizes[2]=-nPanelSizes[2];
+            cProgram3.bDoRedraw = true;
         }
-        if (mnuClick(nId, "Show Device Mode")) {
+
+        if (mnuCheck(nId, "Show Data",  nPanelSizes[3]>0)) {      //Revision 170921 increase panel size
+            nPanelSizes[3]=-nPanelSizes[3];
+            cProgram3.bDoRedraw = true;
+        }
+        if (mnuClick(nId, "Set Device Mode")) {
             mBitFields_Show();
         }
-/*180328k
-        if (mnuClick(nId, "Next page ")) {
-            cProgram3.nWatchPage = ((cProgram3.nWatchPage + 1) % 2);
-            cProgram3.bDoRedraw = true;
-        }
-        */
-        /*180328z
-        if ((0 < cProgram3.mPrivileges()) & (mFocusedPanel() != null)) {
-            if (mnuClick(nId, "Zoom panel")) {  //180328z
-                ViewGroup fa = (ViewGroup) mFocusedPanel();
-                float w = cAndMeth.mLayoutHeightGet(fa);
-                w = (w + 1) % 5;
-                cAndMeth.mLayoutWeightSet(fa, w);
-            }
-        }
-        */
-
         if (cProgram3.mPrivileges() > 0) {            //180329    Advanced permissions
             if (mnuClick(nId, "Edit:" + cUInput.oCtrlID(), cUInput.mSelected())) {
                 oUInput.mEditControl2(); //Associate element with widget
             }
         }
-
-        if (cProgram3.mPrivileges() > 10) {            //170728    Advanced permissions
-            if (mnuClick(nId, "Control:" + cUInput.oCtrlID(), cUInput.mSelected())) {
-                cUInput.mInputViewSettings1(true); //Associate element with widget
-            }
-        }
-        myMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "______________________________________").setEnabled(false);
         if (mnuClick(nId, "Settings")) {
             oUInput.mSettingsDialog();
+            //mDispSettings();
         }
-        /*
-        if (cProgram3.mPrivileges() > 0){
-             menuDevices(nId); //180328Dev
-        }
-        */
- //       if (mnuClick(nId,"User permissions"))          //R170725
- //           cUInput.mUserLevel();
+        myMenu.add(Menu.NONE, Menu.NONE, Menu.NONE, "______________________________________").setEnabled(false);
         if (mnuClick(nId,"About & Help"))          //R170725
         {
             mShowAbout();
@@ -125,7 +105,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     private void mShowAbout() {      //Open a browser with the google help document
-        String s = mFileRead_Raw("lm2_help");
+        String s = mFileRead_Raw(cProgram3.sFileName_Help);
         cUInput.mShowHtml("LibreMano App",s);
     }
 
@@ -168,14 +148,7 @@ public class BaseActivity extends AppCompatActivity {
         mnuClick(nId,s);
         if (nId<0) {
             mnuStatus = myMenu.findItem(nMnuCount); //r180328
-            mnuStatus.setTitle("Devices");
             mnuStatus.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-       //     mi.setCheckable(true);        //no EFFECT
-       //     mi.setChecked(true);
-            //     SpannableString spanString = new SpannableString(mi.getTitle().toString()+"*");
-//            spanString.setSpan(new ForegroundColorSpan(Color.GREEN), 0, spanString.length(), 0); //fix the color to white
-            //          mi.setTitle(spanString);
-            //mi.setTitle(Html.fromHtml("<font color='#343824'><B>Settings</font>"));
         }
         return (nId==nMnuCount);
             /*      Alternative information
