@@ -12,7 +12,7 @@ android {
     compileSdkVersion 25
 
     defaultConfig {
-        applicationId "it.fdg.lm180326"
+        applicationId "it.fdg.lm180516"
         minSdkVersion 23
         targetSdkVersion 25
         versionCode 22

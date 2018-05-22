@@ -179,7 +179,8 @@ public class fMain extends BaseActivity {
                         oUInput.mInputValue1();
                     } else if (oGlobalGestureDetector.bFlingDown()){
                         if (V.bRotate)  //Only fling zero vertical sliders. 180417A
-                         oUInput.mZero();
+                            V.nActiveValue(0);
+                         //oUInput.mZero();
                     } else
                         bRetVal = V.onTouchEvent(event);              //Perform sliding movements
                     return  bRetVal;           //The event was processed

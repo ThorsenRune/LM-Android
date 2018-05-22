@@ -16,7 +16,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name="it.fdg.lm.fMain"
-            android:label="LibreMano"
+            android:label="LibreMano V 180516"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

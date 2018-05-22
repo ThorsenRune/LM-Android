@@ -35,6 +35,7 @@ import android.view.ViewGroup;
 import static android.graphics.Color.GREEN;
 import static android.graphics.Color.WHITE;
 import static it.fdg.lm.cProgram3.nSliderSize;
+import static it.fdg.lm.cProgram3.oGlobalGestureDetector;
 import static it.fdg.lm.cProgram3.oGraphText;
 
 public class cSliderView extends View {
@@ -225,6 +226,10 @@ public class cSliderView extends View {
         float val = oHandle[nActiveIdx].getValue(nScaleMax);
         return val;
     }
+    public void nActiveValue(int val) {
+        oHandle[nActiveIdx].setValue(nScaleMax,val);
+        bChangedByUser=true;
+    }
 
 
     private int mY2C(int y){  //Transform y rotated views coordinates
@@ -338,11 +343,11 @@ public class cSliderView extends View {
             case MotionEvent.ACTION_MOVE:
                 if ((bCanDrag)&(0<= nActiveIdx)){
                     X= mSiblingLimited2(nActiveIdx,X);
-               //     if ( mUIAction_CanMoveTo(X)){
+                    {
                         oHandle[nActiveIdx].setX(X);
                         eventValueChanged(mGetAllValues());
                         bChangedByUser =true;
-                //    }
+                    }
                 }
                 ret=true;
                 break;
@@ -482,6 +487,8 @@ public class cSliderView extends View {
     public void mVisible(int i, boolean b) {
         bVisible[i]=b;
     }
+
+
 
     /**
      * Interface which defines the knob values changed listener method
