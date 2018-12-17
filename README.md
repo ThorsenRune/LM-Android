@@ -32,4 +32,4 @@ Description of the hardware iterration 2016 can be found here:
 
 
 ----
- This file has been created with [lmmx](https://github.com/lmmx)/[gdocs2md-html](https://github.com/lmmx/gdocs2md-html)
+This part of the LM project has been supported by The Italian Ministry of Health - Ricerca Corrente and the Promobilia Foundation (Sweden) grant no 16066
